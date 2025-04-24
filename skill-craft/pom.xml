@@ -41,7 +41,11 @@
             <scope>test</scope>
         </dependency>
 
+<<<<<<< Updated upstream
         <!-- MongoDB Dependency -->
+=======
+        <!--  Dependency for mongodb -->
+>>>>>>> Stashed changes
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
