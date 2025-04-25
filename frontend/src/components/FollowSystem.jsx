@@ -7,10 +7,7 @@ import {
   deleteRequest
 } from '../services/followService';
 
-const mockUsers = ['user1', 'user2', 'user3', 'user4', 'user5'];
-
-const FollowSystem = () => {
-  const [senderId, setSenderId] = useState('user1');
+const FollowSystem = ({ senderId }) => {
   const [receiverId, setReceiverId] = useState('');
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
@@ -21,7 +18,9 @@ const FollowSystem = () => {
   };
 
   useEffect(() => {
-    refreshData();
+    if (senderId) {
+      refreshData();
+    }
   }, [senderId]);
 
   const handleSend = () => {
@@ -55,10 +54,7 @@ const FollowSystem = () => {
       <h2>Follow System</h2>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label><strong>Sender (Logged in):</strong></label>
-        <select value={senderId} onChange={(e) => setSenderId(e.target.value)} style={{ marginLeft: '1rem' }}>
-          {mockUsers.map(user => <option key={user} value={user}>{user}</option>)}
-        </select>
+        <label><strong>Logged in as:</strong> {senderId}</label>
       </div>
 
       <div>
@@ -78,21 +74,21 @@ const FollowSystem = () => {
         <div>
           <h3>Sent Requests</h3>
           <ul>
-          {sentRequests.map(req => (
-  <li key={req.id}>
-    To: {req.receiverId} — <strong>{req.status}</strong>
-    {req.status === 'pending' && (
-      <>
-        <button onClick={() => handleDelete(req.id)} style={{ marginLeft: '10px' }}>Cancel</button>
-      </>
-    )}
-    {req.status === 'accepted' && (
-      <>
-        <button onClick={() => handleAction(req.id, 'unfollow')} style={{ marginLeft: '10px' }}>Unfollow</button>
-      </>
-    )}
-  </li>
-))}
+            {sentRequests.map(req => (
+              <li key={req.id}>
+                To: {req.receiverId} — <strong>{req.status}</strong>
+                {req.status === 'pending' && (
+                  <>
+                    <button onClick={() => handleDelete(req.id)} style={{ marginLeft: '10px' }}>Cancel</button>
+                  </>
+                )}
+                {req.status === 'accepted' && (
+                  <>
+                    <button onClick={() => handleAction(req.id, 'unfollow')} style={{ marginLeft: '10px' }}>Unfollow</button>
+                  </>
+                )}
+              </li>
+            ))}
           </ul>
         </div>
 
