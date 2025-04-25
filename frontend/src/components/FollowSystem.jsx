@@ -6,6 +6,7 @@ import {
   updateRequestStatus,
   deleteRequest
 } from '../services/followService';
+import { Tab, Nav, Button, ListGroup, Badge } from 'react-bootstrap';
 
 const FollowSystem = ({ senderId }) => {
   const [receiverId, setReceiverId] = useState('');
@@ -18,9 +19,7 @@ const FollowSystem = ({ senderId }) => {
   };
 
   useEffect(() => {
-    if (senderId) {
-      refreshData();
-    }
+    if (senderId) refreshData();
   }, [senderId]);
 
   const handleSend = () => {
@@ -39,88 +38,76 @@ const FollowSystem = ({ senderId }) => {
     deleteRequest(id).then(() => refreshData());
   };
 
-  const statusColor = (status) => {
-    switch (status) {
-      case 'pending': return '#f0ad4e';
-      case 'accepted': return '#5cb85c';
-      case 'declined': return '#d9534f';
-      case 'unfollow': return '#999';
-      default: return '#ccc';
-    }
-  };
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <h2>Follow System</h2>
+    <div className="container mt-4">
+      <h3 className="mb-4">Welcome, {senderId}</h3>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label><strong>Logged in as:</strong> {senderId}</label>
-      </div>
-
-      <div>
+      <div className="mb-4 d-flex">
         <input
-          placeholder="Receiver ID"
+          className="form-control me-2"
+          placeholder="Enter username to follow"
           value={receiverId}
           onChange={(e) => setReceiverId(e.target.value)}
-          style={{ padding: '6px', width: '200px', marginRight: '10px' }}
         />
-        <button onClick={handleSend}>Send Follow Request</button>
+        <Button onClick={handleSend}>Follow</Button>
       </div>
 
-      <hr />
+      <Tab.Container defaultActiveKey="sent">
+        <Nav variant="tabs">
+          <Nav.Item>
+            <Nav.Link eventKey="sent">Sent Requests</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="received">Friend Requests</Nav.Link>
+          </Nav.Item>
+        </Nav>
 
-      <div style={{ display: 'flex', gap: '40px' }}>
-        {/* Sent Requests */}
-        <div>
-          <h3>Sent Requests</h3>
-          <ul>
-            {sentRequests.map(req => (
-              <li key={req.id}>
-                To: {req.receiverId} — <strong>{req.status}</strong>
-                {req.status === 'pending' && (
-                  <>
-                    <button onClick={() => handleDelete(req.id)} style={{ marginLeft: '10px' }}>Cancel</button>
-                  </>
-                )}
-                {req.status === 'accepted' && (
-                  <>
-                    <button onClick={() => handleAction(req.id, 'unfollow')} style={{ marginLeft: '10px' }}>Unfollow</button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Tab.Content className="mt-3">
+          {/* Sent Requests */}
+          <Tab.Pane eventKey="sent">
+            <ListGroup>
+              {sentRequests.map(req => (
+                <ListGroup.Item key={req.id} className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{req.receiverId}</strong>
+                    <Badge bg="secondary" className="ms-2">{req.status}</Badge>
+                  </div>
+                  <div>
+                    {req.status === 'pending' && (
+                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(req.id)}>Cancel</Button>
+                    )}
+                    {req.status === 'accepted' && (
+                      <Button variant="outline-warning" size="sm" onClick={() => handleAction(req.id, 'unfollow')}>Unfollow</Button>
+                    )}
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </Tab.Pane>
 
-        {/* Received Requests */}
-        <div>
-          <h3>Received Requests</h3>
-          <ul>
-            {receivedRequests.map(req => (
-              <li key={req.id} style={{ marginBottom: '10px' }}>
-                From: <strong>{req.senderId}</strong>
-                <span style={{
-                  backgroundColor: statusColor(req.status),
-                  color: 'white',
-                  padding: '2px 8px',
-                  borderRadius: '5px',
-                  marginLeft: '8px',
-                  fontSize: '12px'
-                }}>
-                  {req.status}
-                </span>
-
-                {req.status === 'pending' && (
-                  <>
-                    <button onClick={() => handleAction(req.id, 'accepted')} style={{ marginLeft: '10px' }}>Accept</button>
-                    <button onClick={() => handleAction(req.id, 'declined')} style={{ marginLeft: '5px' }}>Decline</button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+          {/* Received Requests */}
+          <Tab.Pane eventKey="received">
+            <ListGroup>
+              {receivedRequests.map(req => (
+                <ListGroup.Item key={req.id} className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{req.senderId}</strong>
+                    <Badge bg="info" className="ms-2">{req.status}</Badge>
+                  </div>
+                  <div>
+                    {req.status === 'pending' && (
+                      <>
+                        <Button variant="primary" size="sm" onClick={() => handleAction(req.id, 'accepted')}>Confirm</Button>{' '}
+                        <Button variant="danger" size="sm" onClick={() => handleAction(req.id, 'declined')}>Delete</Button>
+                      </>
+                    )}
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </Tab.Pane>
+        </Tab.Content>
+      </Tab.Container>
     </div>
   );
 };
