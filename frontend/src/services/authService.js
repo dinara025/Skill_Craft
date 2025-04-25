@@ -11,3 +11,6 @@ export const loginUser = (username, password) =>
   axios.post(`${API_BASE}/login`, null, {
     params: { username, password }
   });
+
+  export const getAllUsers = () => axios.get('http://localhost:8080/api/user/all');
+ 

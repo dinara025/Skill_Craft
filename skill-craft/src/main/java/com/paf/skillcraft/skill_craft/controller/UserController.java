@@ -2,6 +2,9 @@ package com.paf.skillcraft.skill_craft.controller;
 
 import com.paf.skillcraft.skill_craft.model.User;
 import com.paf.skillcraft.skill_craft.service.UserService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,5 +24,12 @@ public class UserController {
     @PostMapping("/login")
     public User login(@RequestParam String username, @RequestParam String password) {
         return userService.login(username, password);
+    
     }
+
+    @GetMapping("/all")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
 }
