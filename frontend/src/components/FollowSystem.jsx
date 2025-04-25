@@ -94,26 +94,31 @@ const FollowSystem = ({ senderId }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-3"
         />
-        <ListGroup style={{ maxHeight: '200px', overflowY: 'auto' }}>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map(user => (
-              <ListGroup.Item
-                key={user.id}
-                className="d-flex justify-content-between align-items-center"
-              >
-                <span>{user.username}</span>
-                <Button
-                  size="sm"
-                  onClick={() => handleSend(user.username)}
-                >
-                  Follow
-                </Button>
-              </ListGroup.Item>
-            ))
-          ) : (
-            <ListGroup.Item>No users found</ListGroup.Item>
-          )}
-        </ListGroup>
+      {searchTerm.length > 0 ? (
+  <ListGroup style={{ maxHeight: '200px', overflowY: 'auto' }}>
+    {filteredUsers.length > 0 ? (
+      filteredUsers.map(user => (
+        <ListGroup.Item
+          key={user.id}
+          className="d-flex justify-content-between align-items-center"
+        >
+          <span>{user.username}</span>
+          <Button
+            size="sm"
+            onClick={() => handleSend(user.username)}
+          >
+            Follow
+          </Button>
+        </ListGroup.Item>
+      ))
+    ) : (
+      <ListGroup.Item>No users found</ListGroup.Item>
+    )}
+  </ListGroup>
+) : (
+  <p className="text-muted">Start typing to search for users</p>
+)}
+
       </div>
 
       {/* Tabs */}
