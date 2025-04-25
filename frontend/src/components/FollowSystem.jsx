@@ -16,21 +16,19 @@ const FollowSystem = ({ senderId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [friends, setFriends] = useState([]);
 
-  const refreshData = () => {
-    getSentRequests(senderId).then(res => {
-      setSentRequests(res.data);
-      const accepted = res.data.filter(r => r.status === 'accepted');
-      setFriends(accepted);
-    });
-
-    getReceivedRequests(senderId).then(res => {
-      setReceivedRequests(res.data);
-    });
+  const refreshData = async () => {
+    const sentRes = await getSentRequests(senderId);
+    const receivedRes = await getReceivedRequests(senderId);
+    setSentRequests(sentRes.data);
+    setReceivedRequests(receivedRes.data);
   };
 
   const loadUsers = async () => {
     const res = await getAllUsers();
-    const followedIds = sentRequests.map(req => req.receiverId);
+    const followedIds = sentRequests
+      .filter(req => req.status === 'pending' || req.status === 'accepted')
+      .map(req => req.receiverId);
+
     const filteredUsers = res.data.filter(user =>
       user.username !== senderId && !followedIds.includes(user.username)
     );
@@ -47,7 +45,14 @@ const FollowSystem = ({ senderId }) => {
     if (senderId) {
       loadUsers();
     }
-  }, [senderId, sentRequests]);
+  }, [sentRequests]);
+
+  useEffect(() => {
+    const outgoingAccepted = sentRequests.filter(r => r.status === 'accepted').map(r => r.receiverId);
+    const incomingAccepted = receivedRequests.filter(r => r.status === 'accepted').map(r => r.senderId);
+    const allFriends = [...new Set([...outgoingAccepted, ...incomingAccepted])];
+    setFriends(allFriends);
+  }, [sentRequests, receivedRequests]);
 
   const handleSend = (receiverId) => {
     sendFollowRequest(senderId, receiverId).then(() => {
@@ -76,8 +81,10 @@ const FollowSystem = ({ senderId }) => {
 
   return (
     <div className="container mt-4">
-      <h3 className="mb-4">Welcome, {senderId}</h3>
+      <h2>SkillCraft Platform</h2>
+      <p><strong>Logged in as:</strong> {senderId}</p>
 
+      {/* Search users to follow */}
       <div className="mb-4">
         <h5>Search Users to Follow</h5>
         <Form.Control
@@ -109,6 +116,7 @@ const FollowSystem = ({ senderId }) => {
         </ListGroup>
       </div>
 
+      {/* Tabs */}
       <Tab.Container defaultActiveKey="sent">
         <Nav variant="tabs">
           <Nav.Item>
@@ -134,11 +142,12 @@ const FollowSystem = ({ senderId }) => {
                       <strong>{req.receiverId}</strong>
                       <Badge bg="secondary" className="ms-2">{req.status}</Badge>
                     </div>
-                    <div>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(req.id)}>Cancel</Button>
-                    </div>
+                    <Button variant="outline-danger" size="sm" onClick={() => handleDelete(req.id)}>Cancel</Button>
                   </ListGroup.Item>
                 ))}
+              {sentRequests.filter(req => req.status === 'pending').length === 0 && (
+                <ListGroup.Item>No pending sent requests</ListGroup.Item>
+              )}
             </ListGroup>
           </Tab.Pane>
 
@@ -159,19 +168,44 @@ const FollowSystem = ({ senderId }) => {
                     </div>
                   </ListGroup.Item>
                 ))}
+              {receivedRequests.filter(req => req.status === 'pending').length === 0 && (
+                <ListGroup.Item>No friend requests</ListGroup.Item>
+              )}
             </ListGroup>
           </Tab.Pane>
 
           {/* Friends Tab */}
           <Tab.Pane eventKey="friends">
             <ListGroup>
-              {friends.map(friend => (
-                <ListGroup.Item key={friend.id} className="d-flex justify-content-between align-items-center">
-                  <strong>{friend.receiverId}</strong>
+              {friends.map(friendUsername => (
+                <ListGroup.Item key={friendUsername} className="d-flex justify-content-between align-items-center">
+                  <strong>{friendUsername}</strong>
                   <Button
                     variant="outline-warning"
                     size="sm"
-                    onClick={() => handleAction(friend.id, 'unfollow')}
+                    onClick={() => {
+                      // Check in sentRequests
+                      const sentReq = sentRequests.find(
+                        req => req.receiverId === friendUsername && req.status === 'accepted'
+                      );
+
+                      if (sentReq) {
+                        handleAction(sentReq.id, 'unfollow');
+                        return;
+                      }
+
+                      // Check in receivedRequests
+                      const receivedReq = receivedRequests.find(
+                        req => req.senderId === friendUsername && req.status === 'accepted'
+                      );
+
+                      if (receivedReq) {
+                        handleAction(receivedReq.id, 'unfollow');
+                        return;
+                      }
+
+                      alert("Something went wrong. Could not unfollow.");
+                    }}
                   >
                     Unfollow
                   </Button>
