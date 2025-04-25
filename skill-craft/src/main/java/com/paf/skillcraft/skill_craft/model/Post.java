@@ -10,11 +10,9 @@ public class Post {
     @Id
     private String id;
     private String userId;
-    private String title;
     private String content;
     private List<String> mediaLinks;
     private List<String> tags;
-    private String type; // normal, template, learningUpdate
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -33,14 +31,6 @@ public class Post {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getContent() {
@@ -65,14 +55,6 @@ public class Post {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public LocalDateTime getCreatedAt() {
