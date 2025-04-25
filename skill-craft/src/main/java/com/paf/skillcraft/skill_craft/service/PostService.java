@@ -41,10 +41,6 @@ public class PostService {
         Optional<Post> existing = postRepository.findById(id);
         if (existing.isPresent()) {
             Post post = existing.get();
-            // Update fields only if provided in updatedPost
-            if (updatedPost.getTitle() != null) {
-                post.setTitle(updatedPost.getTitle());
-            }
             if (updatedPost.getContent() != null) {
                 post.setContent(updatedPost.getContent());
             }
@@ -54,12 +50,10 @@ public class PostService {
             if (updatedPost.getTags() != null) {
                 post.setTags(updatedPost.getTags());
             }
-            if (updatedPost.getType() != null) {
-                post.setType(updatedPost.getType());
-            }
             post.setUpdatedAt(LocalDateTime.now());
             return postRepository.save(post);
         }
-        return null; // Consider throwing an exception instead (e.g., ResourceNotFoundException)
+        return null;
     }
+    
 }

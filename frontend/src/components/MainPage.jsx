@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
 import { 
   FaSearch, 
@@ -18,14 +19,26 @@ import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
 import '../styles/MainPage.css';
 
-const MainPage = () => {
-  // Current user data
-  const currentUser = {
-    name: "Alex Johnson",
-    handle: "@alexj",
+
+
+
+const MainPage = ({ user, children }) => {
+  // Use the user data from props if available
+  const currentUser = user ? {
+    id: user.id,             // MongoDB document ID
+    name: user.username,     // Display username as the name
+    handle: `@${user.username.toLowerCase()}`, // Create handle from username
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg", // Default avatar
+    skills: ["UI/UX", "React", "Figma"] // Default skills (you may want to add these to your User model later)
+  } : {
+    // Fallback data if no user is provided
+    name: "Guest User",
+    handle: "@guest",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    skills: ["UI/UX", "React", "Figma"]
+    skills: []
   };
+
+  const navigate = useNavigate();
 
   // Navigation tabs
   const tabs = [
@@ -320,16 +333,23 @@ const MainPage = () => {
                 <Card.Body>
                   <h5>Quick Actions</h5>
                   <div className="actions-list">
-                    {quickActions.map((action, index) => (
-                      <Button 
-                        key={index} 
-                        variant={action.variant} 
-                        className="action-btn"
-                      >
-                        {action.icon}
-                        {action.label}
-                      </Button>
-                    ))}
+                  {quickActions.map((action, index) => (
+                    <Button 
+                      key={index} 
+                      variant={action.variant} 
+                      className="action-btn"
+                      onClick={() => {
+                        if (action.label === "Create Post") {
+                          navigate("/create-post");
+                        }
+                        // You can add more actions here for other buttons if needed
+                      }}
+                    >
+                      {action.icon}
+                      {action.label}
+                    </Button>
+                  ))}
+
                   </div>
                 </Card.Body>
               </Card>
