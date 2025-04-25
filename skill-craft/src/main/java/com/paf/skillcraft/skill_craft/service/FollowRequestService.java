@@ -16,12 +16,23 @@ public class FollowRequestService {
 
     public FollowRequest createFollowRequest(String senderId, String receiverId) {
         List<FollowRequest> existing = followRequestRepository.findBySenderIdAndReceiverId(senderId, receiverId);
+        
         if (!existing.isEmpty()) {
-            return existing.get(0); // avoid duplicate follow requests
+            FollowRequest existingRequest = existing.get(0);
+            String status = existingRequest.getStatus();
+    
+            // Only block if current status is not 'unfollow' or 'declined'
+            if (!"unfollow".equalsIgnoreCase(status) && !"declined".equalsIgnoreCase(status)) {
+                return existingRequest;
+            }
+    
+            // Otherwise, create a NEW follow request
         }
-        FollowRequest request = new FollowRequest(senderId, receiverId);
-        return followRequestRepository.save(request);
+    
+        FollowRequest newRequest = new FollowRequest(senderId, receiverId);
+        return followRequestRepository.save(newRequest);
     }
+    
 
     public List<FollowRequest> getSentRequests(String senderId) {
         return followRequestRepository.findBySenderId(senderId);

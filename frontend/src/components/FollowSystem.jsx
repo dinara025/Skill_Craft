@@ -7,14 +7,18 @@ import {
   deleteRequest
 } from '../services/followService';
 import { getAllUsers } from '../services/authService';
-import { Tab, Nav, Button, ListGroup, Badge, Form } from 'react-bootstrap';
+import { Tab, Nav, Button, ListGroup, Badge, Form, InputGroup } from 'react-bootstrap';
+import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaUserMinus, FaUserClock } from 'react-icons/fa';
+import '../styles/FollowSystem.css';
 
-const FollowSystem = ({ senderId }) => {
+const FollowSystem = ({ show, onClose, senderId }) => {
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [friends, setFriends] = useState([]);
+  const [activeTab, setActiveTab] = useState('sent');
+  const [mutualFriends, setMutualFriends] = useState([]);
 
   const refreshData = async () => {
     const sentRes = await getSentRequests(senderId);
@@ -25,34 +29,47 @@ const FollowSystem = ({ senderId }) => {
 
   const loadUsers = async () => {
     const res = await getAllUsers();
-    const followedIds = sentRequests
+  
+    // only keep users who are NOT already being followed (pending or accepted)
+    const blockedUsernames = sentRequests
       .filter(req => req.status === 'pending' || req.status === 'accepted')
       .map(req => req.receiverId);
-
-    const filteredUsers = res.data.filter(user =>
-      user.username !== senderId && !followedIds.includes(user.username)
-    );
+  
+    // remove users already in `friends` too (they are being shown elsewhere)
+    const filteredUsers = res.data.filter(user => {
+      const isSelf = user.username === senderId;
+      const isBlocked = blockedUsernames.includes(user.username);
+      const isAlreadyFriend = friends.includes(user.username);
+  
+      return !isSelf && !isBlocked && !isAlreadyFriend;
+    });
+  
     setAllUsers(filteredUsers);
   };
+  
 
   useEffect(() => {
-    if (senderId) {
+    if (senderId && show) {
       refreshData();
     }
-  }, [senderId]);
+  }, [senderId, show]);
 
   useEffect(() => {
-    if (senderId) {
+    if (senderId && show) {
       loadUsers();
     }
-  }, [sentRequests]);
+  }, [sentRequests, show]);
 
   useEffect(() => {
     const outgoingAccepted = sentRequests.filter(r => r.status === 'accepted').map(r => r.receiverId);
     const incomingAccepted = receivedRequests.filter(r => r.status === 'accepted').map(r => r.senderId);
     const allFriends = [...new Set([...outgoingAccepted, ...incomingAccepted])];
     setFriends(allFriends);
+  
+    const mutuals = outgoingAccepted.filter(user => incomingAccepted.includes(user));
+    setMutualFriends(mutuals);
   }, [sentRequests, receivedRequests]);
+  
 
   const handleSend = (receiverId) => {
     sendFollowRequest(senderId, receiverId).then(() => {
@@ -79,150 +96,215 @@ const FollowSystem = ({ senderId }) => {
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (!show) return null;
+
   return (
-    <div className="container mt-4">
-      <h2>SkillCraft Platform</h2>
-      <p><strong>Logged in as:</strong> {senderId}</p>
+    <div className="follow-system-modal">
+      <div className="follow-system-content">
+        <div className="follow-system-header">
+          <h3>Connect with Others</h3>
+          <button className="close-btn" onClick={onClose}>&times;</button>
+        </div>
 
-      {/* Search users to follow */}
-      <div className="mb-4">
-        <h5>Search Users to Follow</h5>
-        <Form.Control
-          type="text"
-          placeholder="Search by username"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-3"
-        />
-      {searchTerm.length > 0 ? (
-  <ListGroup style={{ maxHeight: '200px', overflowY: 'auto' }}>
-    {filteredUsers.length > 0 ? (
-      filteredUsers.map(user => (
-        <ListGroup.Item
-          key={user.id}
-          className="d-flex justify-content-between align-items-center"
-        >
-          <span>{user.username}</span>
-          <Button
-            size="sm"
-            onClick={() => handleSend(user.username)}
-          >
-            Follow
-          </Button>
-        </ListGroup.Item>
-      ))
-    ) : (
-      <ListGroup.Item>No users found</ListGroup.Item>
-    )}
-  </ListGroup>
-) : (
-  <p className="text-muted">Start typing to search for users</p>
-)}
+        <div className="search-section">
+          <InputGroup className="mb-4">
+            <InputGroup.Text>
+              <FaSearch />
+            </InputGroup.Text>
+            <Form.Control
+              type="text"
+              placeholder="Search users to follow..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
 
+          {searchTerm.length > 0 && (
+            <div className="search-results">
+              {filteredUsers.length > 0 ? (
+                <ListGroup>
+                  {filteredUsers.map(user => (
+                    <ListGroup.Item key={user.id} className="user-item">
+                      <div className="user-info">
+                        <span className="username">{user.username}</span>
+                      </div>
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => handleSend(user.username)}
+                        className="follow-btn"
+                      >
+                        <FaUserPlus className="me-1" /> Follow
+                      </Button>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div className="no-results">No users found</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
+          <Nav variant="tabs" className="follow-tabs">
+            <Nav.Item>
+              <Nav.Link eventKey="sent">
+                <FaUserClock className="me-1" /> Sent
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="received">
+                <FaUserPlus className="me-1" /> Requests
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="followers">
+                <FaUserCheck className="me-1" /> followers
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+               <Nav.Link eventKey="mutual">
+               <FaUserCheck className="me-1" /> Mutual Frineds
+              </Nav.Link>
+            </Nav.Item>
+
+          </Nav>
+
+          <Tab.Content className="follow-tab-content">
+            {/* Sent Requests */}
+            <Tab.Pane eventKey="sent">
+              {sentRequests.filter(req => req.status === 'pending').length > 0 ? (
+                <ListGroup>
+                  {sentRequests
+                    .filter(req => req.status === 'pending')
+                    .map(req => (
+                      <ListGroup.Item key={req.id} className="request-item">
+                        <div className="user-info">
+                          <span className="username">{req.receiverId}</span>
+                          <Badge bg="warning" className="status-badge">Pending</Badge>
+                        </div>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(req.id)}
+                          className="action-btn"
+                        >
+                          <FaUserTimes className="me-1" /> Cancel
+                        </Button>
+                      </ListGroup.Item>
+                    ))}
+                </ListGroup>
+              ) : (
+                <div className="empty-state">
+                  <p>No pending sent requests</p>
+                </div>
+              )}
+            </Tab.Pane>
+
+            {/* Received Requests */}
+            <Tab.Pane eventKey="received">
+              {receivedRequests.filter(req => req.status === 'pending').length > 0 ? (
+                <ListGroup>
+                  {receivedRequests
+                    .filter(req => req.status === 'pending')
+                    .map(req => (
+                      <ListGroup.Item key={req.id} className="request-item">
+                        <div className="user-info">
+                          <span className="username">{req.senderId}</span>
+                          <Badge bg="info" className="status-badge">Request</Badge>
+                        </div>
+                        <div className="action-buttons">
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() => handleAction(req.id, 'accepted')}
+                            className="action-btn"
+                          >
+                            <FaUserCheck className="me-1" /> Accept
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleAction(req.id, 'declined')}
+                            className="action-btn"
+                          >
+                            <FaUserTimes className="me-1" /> Decline
+                          </Button>
+                        </div>
+                      </ListGroup.Item>
+                    ))}
+                </ListGroup>
+              ) : (
+                <div className="empty-state">
+                  <p>No friend requests</p>
+                </div>
+              )}
+            </Tab.Pane>
+
+            {/* Friends Tab */}
+            <Tab.Pane eventKey="followers">
+              {friends.length > 0 ? (
+                <ListGroup>
+                  {friends.map(friendUsername => (
+                    <ListGroup.Item key={friendUsername} className="friend-item">
+                      <div className="user-info">
+                        <span className="username">{friendUsername}</span>
+                        <Badge bg="success" className="status-badge">Friend</Badge>
+                      </div>
+                      <Button
+                        variant="outline-warning"
+                        size="sm"
+                        onClick={() => {
+                          const sentReq = sentRequests.find(
+                            req => req.receiverId === friendUsername && req.status === 'accepted'
+                          );
+                          if (sentReq) {
+                            handleAction(sentReq.id, 'unfollow');
+                            return;
+                          }
+                          const receivedReq = receivedRequests.find(
+                            req => req.senderId === friendUsername && req.status === 'accepted'
+                          );
+                          if (receivedReq) {
+                            handleAction(receivedReq.id, 'unfollow');
+                            return;
+                          }
+                        }}
+                        className="action-btn"
+                      >
+                        <FaUserMinus className="me-1" /> Unfollow
+                      </Button>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div className="empty-state">
+                  <p>No friends yet</p>
+                </div>
+              )}
+            </Tab.Pane>
+                        <Tab.Pane eventKey="mutual">
+              {mutualFriends.length > 0 ? (
+                <ListGroup>
+                  {mutualFriends.map(username => (
+                    <ListGroup.Item key={username} className="friend-item">
+                      <div className="user-info">
+                        <span className="username">{username}</span>
+                        <Badge bg="primary" className="status-badge">Mutual</Badge>
+                      </div>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <div className="empty-state">
+                  <p>No mutual friends</p>
+                </div>
+              )}
+            </Tab.Pane>
+          </Tab.Content>
+        </Tab.Container>
       </div>
-
-      {/* Tabs */}
-      <Tab.Container defaultActiveKey="sent">
-        <Nav variant="tabs">
-          <Nav.Item>
-            <Nav.Link eventKey="sent">Sent Requests</Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="received">Friend Requests</Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="friends">Friends</Nav.Link>
-          </Nav.Item>
-        </Nav>
-
-        <Tab.Content className="mt-3">
-          {/* Sent Requests */}
-          <Tab.Pane eventKey="sent">
-            <ListGroup>
-              {sentRequests
-                .filter(req => req.status === 'pending')
-                .map(req => (
-                  <ListGroup.Item key={req.id} className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{req.receiverId}</strong>
-                      <Badge bg="secondary" className="ms-2">{req.status}</Badge>
-                    </div>
-                    <Button variant="outline-danger" size="sm" onClick={() => handleDelete(req.id)}>Cancel</Button>
-                  </ListGroup.Item>
-                ))}
-              {sentRequests.filter(req => req.status === 'pending').length === 0 && (
-                <ListGroup.Item>No pending sent requests</ListGroup.Item>
-              )}
-            </ListGroup>
-          </Tab.Pane>
-
-          {/* Received Requests */}
-          <Tab.Pane eventKey="received">
-            <ListGroup>
-              {receivedRequests
-                .filter(req => req.status === 'pending')
-                .map(req => (
-                  <ListGroup.Item key={req.id} className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{req.senderId}</strong>
-                      <Badge bg="info" className="ms-2">{req.status}</Badge>
-                    </div>
-                    <div>
-                      <Button variant="primary" size="sm" onClick={() => handleAction(req.id, 'accepted')}>Confirm</Button>{' '}
-                      <Button variant="danger" size="sm" onClick={() => handleAction(req.id, 'declined')}>Delete</Button>
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              {receivedRequests.filter(req => req.status === 'pending').length === 0 && (
-                <ListGroup.Item>No friend requests</ListGroup.Item>
-              )}
-            </ListGroup>
-          </Tab.Pane>
-
-          {/* Friends Tab */}
-          <Tab.Pane eventKey="friends">
-            <ListGroup>
-              {friends.map(friendUsername => (
-                <ListGroup.Item key={friendUsername} className="d-flex justify-content-between align-items-center">
-                  <strong>{friendUsername}</strong>
-                  <Button
-                    variant="outline-warning"
-                    size="sm"
-                    onClick={() => {
-                      // Check in sentRequests
-                      const sentReq = sentRequests.find(
-                        req => req.receiverId === friendUsername && req.status === 'accepted'
-                      );
-
-                      if (sentReq) {
-                        handleAction(sentReq.id, 'unfollow');
-                        return;
-                      }
-
-                      // Check in receivedRequests
-                      const receivedReq = receivedRequests.find(
-                        req => req.senderId === friendUsername && req.status === 'accepted'
-                      );
-
-                      if (receivedReq) {
-                        handleAction(receivedReq.id, 'unfollow');
-                        return;
-                      }
-
-                      alert("Something went wrong. Could not unfollow.");
-                    }}
-                  >
-                    Unfollow
-                  </Button>
-                </ListGroup.Item>
-              ))}
-              {friends.length === 0 && (
-                <ListGroup.Item>No friends yet</ListGroup.Item>
-              )}
-            </ListGroup>
-          </Tab.Pane>
-        </Tab.Content>
-      </Tab.Container>
     </div>
   );
 };
