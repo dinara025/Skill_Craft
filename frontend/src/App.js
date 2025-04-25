@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import FollowSystem from './components/FollowSystem';
+import FollowSystem from './components/FollowSystem'; // Import the FollowSystem component
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
