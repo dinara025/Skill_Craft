@@ -1,45 +1,31 @@
 import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import FollowSystem from './components/FollowSystem';
-import Header from './components/Header';
-import NavBar from './components/NavBar';
+import MainPage from './components/MainPage';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [showNav, setShowNav] = useState(false); // nav visibility
-
-  const toggleNav = () => {
-    setShowNav(prev => !prev);
-  };
 
   return (
-    <div className="App">
-      {loggedInUser && (
-        <>
-          <Header onMenuClick={toggleNav} />
-          {showNav && <NavBar onClose={toggleNav}/>}
-        </>
-      )}
-
-      <div style={{ padding: '20px', marginLeft: loggedInUser && showNav ? '220px' : '0' }}>
-        <h2>SkillCraft Platform</h2>
-        {!loggedInUser ? (
-          <>
+    <div className="app">
+      {!loggedInUser ? (
+        <div className="auth-container">
+          <div className="register-section">
+            <h4>Register</h4>
             <RegisterForm onLogin={setLoggedInUser} />
-            <hr />
+          </div>
+
+          <div className="login-section">
+            <h4>Login</h4>
             <LoginForm onLogin={setLoggedInUser} />
-          </>
-        ) : (
-          <>
-            <p>Logged in as: <strong>{loggedInUser.username}</strong></p>
-            <FollowSystem senderId={loggedInUser.username} />
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      ) : (
+        <MainPage senderId={loggedInUser.username} />
+      )}
     </div>
   );
 }
 
 export default App;
+
