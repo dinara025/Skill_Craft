@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { FaHome, FaUsers, FaBook, FaBell, FaCog, FaPlusCircle } from 'react-icons/fa';
+import { Link } from 'react-router-dom'; // <-- import this
 import '../styles/NavBar.css';
 
 function NavBar({ onClose }) {
@@ -26,33 +27,33 @@ function NavBar({ onClose }) {
         </div>
 
         <nav className="sidebar-nav">
-          <a href="#" className="nav-item">
+          <Link to="/" className="nav-item">
             <FaHome className="nav-icon" />
             <span>Home</span>
-          </a>
-          <a href="#" className="nav-item">
+          </Link>
+          <Link to="/communities" className="nav-item">
             <FaUsers className="nav-icon" />
             <span>Communities</span>
-          </a>
-          <a href="#" className="nav-item">
+          </Link>
+          <Link to="/learning" className="nav-item">
             <FaBook className="nav-icon" />
             <span>Learning</span>
-          </a>
-          <a href="#" className="nav-item">
+          </Link>
+          <Link to="/notifications" className="nav-item">
             <FaBell className="nav-icon" />
             <span>Notifications</span>
-          </a>
+          </Link>
         </nav>
 
         <div className="sidebar-bottom">
-          <a href="/create-post" className="nav-item create-post">
+          <Link to="/create-post" className="nav-item create-post">
             <FaPlusCircle className="nav-icon" />
             <span>Create Post</span>
-          </a>
-          <a href="#" className="nav-item">
+          </Link>
+          <Link to="/settings" className="nav-item">
             <FaCog className="nav-icon" />
             <span>Settings</span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>
