@@ -1,15 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { FaHome, FaUsers, FaBook, FaBell, FaCog } from 'react-icons/fa';
+import { FaHome, FaUsers, FaBook, FaBell, FaCog, FaPlusCircle } from 'react-icons/fa';
 import '../styles/NavBar.css';
 
 function NavBar({ onClose }) {
   const sidebarRef = useRef(null);
 
-  // Detect clicks outside the sidebar to trigger onClose
   useEffect(() => {
     function handleClickOutside(event) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        onClose(); // close if clicked outside
+        onClose();
       }
     }
 
@@ -25,6 +24,7 @@ function NavBar({ onClose }) {
         <div className="sidebar-logo">
           <img src="/skill_craft_logo.png" alt="SkillCraft" />
         </div>
+
         <nav className="sidebar-nav">
           <a href="#" className="nav-item">
             <FaHome className="nav-icon" />
@@ -42,11 +42,18 @@ function NavBar({ onClose }) {
             <FaBell className="nav-icon" />
             <span>Notifications</span>
           </a>
+        </nav>
+
+        <div className="sidebar-bottom">
+          <a href="/create-post" className="nav-item create-post">
+            <FaPlusCircle className="nav-icon" />
+            <span>Create Post</span>
+          </a>
           <a href="#" className="nav-item">
             <FaCog className="nav-icon" />
             <span>Settings</span>
           </a>
-        </nav>
+        </div>
       </div>
     </div>
   );
