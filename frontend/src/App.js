@@ -41,6 +41,8 @@ function App() {
             />
            
             <Route path="/create-post" element={<CreatePost user={loggedInUser} />} />
+
+            <Route path="/follow-system" element={<FollowSystem />} />
             {/* Add other routes as needed */}
           </Routes>
         )}

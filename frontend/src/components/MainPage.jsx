@@ -53,12 +53,14 @@ const MainPage = ({ user, children }) => {
     {
       icon: <BsPlusCircleFill className="action-icon" />,
       label: "Create Post",
-      variant: "primary"
+      variant: "primary",
+      onClick: () => navigate("/create-post")
     },
     {
       icon: <FaUserPlus className="action-icon" />,
       label: "Find Friends",
-      variant: "outline-primary"
+      variant: "outline-primary",
+      onClick: () => navigate("/follow-system") // Navigate to FollowSystem page
     },
     {
       icon: <FaChalkboardTeacher className="action-icon" />,
@@ -334,21 +336,11 @@ const MainPage = ({ user, children }) => {
                   <h5>Quick Actions</h5>
                   <div className="actions-list">
                   {quickActions.map((action, index) => (
-                    <Button 
-                      key={index} 
-                      variant={action.variant} 
-                      className="action-btn"
-                      onClick={() => {
-                        if (action.label === "Create Post") {
-                          navigate("/create-post");
-                        }
-                        // You can add more actions here for other buttons if needed
-                      }}
-                    >
-                      {action.icon}
-                      {action.label}
-                    </Button>
-                  ))}
+                         <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
+                           {action.icon}
+                           {action.label}
+                         </Button>
+                       ))}
 
                   </div>
                 </Card.Body>
@@ -397,3 +389,104 @@ const MainPage = ({ user, children }) => {
 };
 
 export default MainPage;
+
+// import React from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
+// import { FaSearch, FaUserPlus, FaChalkboardTeacher, FaBookOpen } from 'react-icons/fa';
+// import { BsPlusCircleFill } from 'react-icons/bs';
+// import Header from '../components/Header';
+// import '../styles/MainPage.css';
+
+// const MainPage = ({ user, children }) => {
+//   const currentUser = user ? {
+//     id: user.id,
+//     name: user.username,
+//     handle: `@${user.username.toLowerCase()}`,
+//     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+//     skills: ["UI/UX", "React", "Figma"]
+//   } : {
+//     name: "Guest User",
+//     handle: "@guest",
+//     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+//     skills: []
+//   };
+
+//   const navigate = useNavigate();
+
+//   // Quick actions
+//   const quickActions = [
+//     {
+//       icon: <BsPlusCircleFill className="action-icon" />,
+//       label: "Create Post",
+//       variant: "primary",
+//       onClick: () => navigate("/create-post")
+//     },
+//     {
+//       icon: <FaUserPlus className="action-icon" />,
+//       label: "Find Friends",
+//       variant: "outline-primary",
+//       onClick: () => navigate("/follow-system") // Navigate to FollowSystem page
+//     },
+//     {
+//       icon: <FaChalkboardTeacher className="action-icon" />,
+//       label: "Start Teaching",
+//       variant: "outline-success"
+//     }
+//   ];
+
+//   return (
+//     <div className="skillshare-social">
+//       <Header />
+
+//       <main className="main-content">
+//         <Container fluid>
+//           <Row>
+//             <Col lg={3} className="left-sidebar d-none d-lg-block">
+//               <Card className="profile-card">
+//                 <div className="profile-header">
+//                   <img src={currentUser.avatar} alt={currentUser.name} className="profile-avatar" />
+//                   <div className="profile-info">
+//                     <h5>{currentUser.name}</h5>
+//                     <p className="text-muted">{currentUser.handle}</p>
+//                   </div>
+//                 </div>
+
+//                 <Button variant="outline-primary" className="edit-profile-btn">
+//                   Edit Profile
+//                 </Button>
+//               </Card>
+//             </Col>
+
+//             <Col lg={6} className="main-feed">
+//               <Card className="create-post-card">
+//                 <div className="post-input-container">
+//                   <img src={currentUser.avatar} alt={currentUser.name} className="post-avatar" />
+//                   <Form.Control as="textarea" rows={2} placeholder="Share what you're learning..." className="post-input" />
+//                 </div>
+//               </Card>
+//             </Col>
+
+//             <Col lg={3} className="right-sidebar d-none d-lg-block">
+//               <Card className="quick-actions-card mb-4">
+//                 <Card.Body>
+//                   <h5>Quick Actions</h5>
+//                   <div className="actions-list">
+//                     {quickActions.map((action, index) => (
+//                       <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
+//                         {action.icon}
+//                         {action.label}
+//                       </Button>
+//                     ))}
+//                   </div>
+//                 </Card.Body>
+//               </Card>
+//             </Col>
+//           </Row>
+//         </Container>
+//       </main>
+//     </div>
+//   );
+// };
+
+// export default MainPage;
