@@ -1,55 +1,60 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
-import CreatePost from './components/CreatePost'; // Add this import
-import LearningPlans from './components/LearningPlans';
+import CreatePost from './components/CreatePost'; 
+import LearningPlans from './components/LearningPlans'; // Added LearningPlans also
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
+
   return (
     <Router>
       <div className="app">
+
+        {/* If NOT logged in, show Login + Register */}
         {!loggedInUser ? (
-          <div className="auth-container">
-            <div className="register-section">
-              <h4>Register</h4>
-              <RegisterForm onLogin={setLoggedInUser} />
-            </div>
-            <div className="login-section">
-              <h4>Login</h4>
-              <LoginForm onLogin={setLoggedInUser} />
-            </div>
-          </div>
+          <Routes>
+            <Route path="/" element={
+              <div className="auth-container">
+                <div className="register-section">
+                  <h4>Register</h4>
+                  <RegisterForm onLogin={setLoggedInUser} />
+                </div>
+                <div className="login-section">
+                  <h4>Login</h4>
+                  <LoginForm onLogin={setLoggedInUser} />
+                </div>
+              </div>
+            } />
+
+            {/* Redirect any unknown route to login page */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         ) : (
           <Routes>
-            {/* Main Page Route */}
-            <Route
-              path="/"
-              element={<MainPage senderId={loggedInUser} />}
-            />
-           
-            {/* Follow System Route */}
-            <Route
-              path="/follow-requests"
-              element={
-                <MainPage senderId={loggedInUser.username}>
-                  <FollowSystem currentUser={loggedInUser} />
-                </MainPage>
-              }
-            />
-           
+            {/* Main page after login */}
+            <Route path="/" element={<MainPage user={loggedInUser} />} />
+
+            {/* Create post page */}
             <Route path="/create-post" element={<CreatePost user={loggedInUser} />} />
 
-            <Route path="/follow-system" element={<FollowSystem />} />
+            {/* Follow System page */}
+            <Route path="/follow-system" element={<FollowSystem senderId={loggedInUser.username} />} />
+
+            {/* Learning Plans page */}
             <Route path="/learning-plans" element={<LearningPlans userId={loggedInUser?.id} />} />
-            {/* Add other routes as needed */}
+
+            {/* Redirect any unknown path after login to MainPage */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         )}
+
       </div>
     </Router>
   );
 }
+
 export default App;
