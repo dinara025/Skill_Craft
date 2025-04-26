@@ -19,7 +19,6 @@ import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
 import '../styles/MainPage.css';
 
-
 const MainPage = ({ user, children }) => {
   // User data
   const currentUser = user ? {
@@ -42,7 +41,7 @@ const MainPage = ({ user, children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sample data for when API fails
+  // Sample data for when API fails (with timestamps for sorting)
   const samplePosts = [
     {
       id: 1,
@@ -54,13 +53,18 @@ const MainPage = ({ user, children }) => {
       },
       content: {
         text: "Just published my new course on Advanced React Patterns! Check it out and let me know what you think. #react #frontend",
-        image: "https://source.unsplash.com/600x400/?coding,react",
+        mediaLinks: [
+          "https://source.unsplash.com/600x400/?coding,react",
+          "https://source.unsplash.com/600x400/?javascript,code",
+          "https://source.unsplash.com/600x400/?frontend,dev"
+        ],
         likes: 142,
         comments: 28,
         shares: 12,
         isLiked: false,
         isBookmarked: false,
-        time: "2 hours ago"
+        time: "2 hours ago",
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
       }
     },
     {
@@ -73,13 +77,14 @@ const MainPage = ({ user, children }) => {
       },
       content: {
         text: "Sharing my latest Figma tutorial on creating responsive components. Who's working on UI design this weekend? #figma #uidesign",
-        image: "https://source.unsplash.com/600x400/?figma,design",
+        mediaLinks: ["https://source.unsplash.com/600x400/?figma,design"],
         likes: 89,
         comments: 15,
         shares: 5,
         isLiked: true,
         isBookmarked: true,
-        time: "5 hours ago"
+        time: "5 hours ago",
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000) // 5 hours ago
       }
     }
   ];
@@ -109,6 +114,7 @@ const MainPage = ({ user, children }) => {
           // Transform data to match the expected post structure
           const transformedPosts = data.map(post => ({
             id: post.id || Math.random().toString(36).substr(2, 9),
+            createdAt: post.createdAt,
             user: {
               name: post.userId || 'Unknown User',
               handle: `@${(post.userId || 'user').toLowerCase()}`,
@@ -117,23 +123,32 @@ const MainPage = ({ user, children }) => {
             },
             content: {
               text: post.content || '',
-              image: post.mediaLinks && post.mediaLinks.length > 0 ? post.mediaLinks[0] : null,
+              mediaLinks: post.mediaLinks || [],
               likes: post.likes || 0,
               comments: post.comments || 0,
               shares: post.shares || 0,
               isLiked: false,
               isBookmarked: false,
-              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently'
+              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently',
+              timestamp: post.createdAt ? new Date(post.createdAt) : new Date()
             }
           }));
+
+          // Sort posts by createdAt in descending order (latest first)
+          transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
           setPosts(transformedPosts);
         } else {
           console.log('No posts found or invalid data structure, using sample posts');
-          setPosts(samplePosts);
+          // Sort sample posts by timestamp
+          const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
+          setPosts(sortedSamplePosts);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        setPosts(samplePosts); // Fallback to sample posts
+        // Sort sample posts by timestamp
+        const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
+        setPosts(sortedSamplePosts);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -351,14 +366,31 @@ const MainPage = ({ user, children }) => {
                       <Card.Text className="post-text">
                         {post.content.text}
                       </Card.Text>
-                      {post.content.image && (
-                        <div className="post-image-container">
-                          <img 
-                            src={post.content.image} 
-                            alt="Post content" 
-                            className="post-image"
-                            onError={(e) => {e.target.style.display = 'none'}} 
-                          />
+                      {post.content.mediaLinks && post.content.mediaLinks.length > 0 && (
+                        <div className="post-media-wrapper">
+                          <div className="post-media-container">
+                            {post.content.mediaLinks.map((link, index) => (
+                              <div key={index} className="post-media-item">
+                                <img 
+                                  src={link} 
+                                  alt={`Post media ${index}`} 
+                                  className="post-media"
+                                  onError={(e) => {e.target.style.display = 'none'}} 
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          {post.content.mediaLinks.length > 1 && (
+                            <div className="media-dots">
+                              {post.content.mediaLinks.map((_, index) => (
+                                <span
+                                  key={index}
+                                  className={`media-dot ${index === 0 ? 'active' : ''}`}
+                                  data-index={index}
+                                ></span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </Card.Body>
