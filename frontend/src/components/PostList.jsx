@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import '../styles/PostList.css';
 
 const PostList = ({ userId }) => {
@@ -24,6 +23,8 @@ const PostList = ({ userId }) => {
           const data = JSON.parse(text); // Attempt to parse
           const transformedPosts = data.map(post => ({
             id: post.id,
+            userId: post.userId,
+            createdAt: post.createdAt,
             user: {
               name: post.userId,
               handle: `@${post.userId.toLowerCase()}`,
@@ -39,15 +40,24 @@ const PostList = ({ userId }) => {
               isLiked: false,
               isBookmarked: false,
               time: new Date(post.createdAt).toLocaleString()
-            }
+            },
+            mediaLinks: post.mediaLinks || [],
+            tags: post.tags || []
           }));
+
+          // Sort posts by createdAt in descending order (latest first)
+          transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
           setPosts(transformedPosts);
+          setLoading(false);
         } catch (jsonError) {
           console.error('JSON parse error:', jsonError);
           throw new Error('Invalid JSON response');
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
+        setError(error.message);
+        setLoading(false);
       }
     };
   
@@ -66,7 +76,7 @@ const PostList = ({ userId }) => {
         <div className="posts">
           {posts.map((post) => (
             <div key={post.id} className="post">
-              <p className="post-content">{post.content}</p>
+              <p className="post-content">{post.content.text}</p>
               {post.mediaLinks && post.mediaLinks.length > 0 && (
                 <div className="media">
                   {post.mediaLinks.map((link, index) => (
