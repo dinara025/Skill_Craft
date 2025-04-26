@@ -5,6 +5,7 @@ import RegisterForm from './components/RegisterForm';
 import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
 import CreatePost from './components/CreatePost'; // Add this import
+import LearningPlans from './components/LearningPlans';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -43,6 +44,7 @@ function App() {
             <Route path="/create-post" element={<CreatePost user={loggedInUser} />} />
 
             <Route path="/follow-system" element={<FollowSystem />} />
+            <Route path="/learning-plans" element={<LearningPlans userId={loggedInUser?.id} />} />
             {/* Add other routes as needed */}
           </Routes>
         )}

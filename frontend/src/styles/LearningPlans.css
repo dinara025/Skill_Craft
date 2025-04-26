@@ -1,0 +1,172 @@
+/* Container */
+.learning-plans-container {
+    padding: 3rem;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Heading */
+  .learning-plans-container h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  /* Button to create */
+  .create-btn {
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 2rem;
+    transition: background 0.3s ease;
+  }
+  
+  .create-btn:hover {
+    background: #135bb0;
+  }
+  
+  /* Plan List */
+  .plan-list {
+    padding: 0;
+    list-style: none;
+  }
+  
+  /* Each Card */
+  .plan-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    transition: transform 0.2s ease;
+  }
+  
+  .plan-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Card Title */
+  .plan-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Card Content */
+  .plan-card p {
+    margin: 0.3rem 0;
+    font-size: 1rem;
+  }
+  
+  .plan-card strong {
+    font-weight: 600;
+  }
+  
+  /* Buttons */
+  .actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+  }
+  
+  .actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .actions button:hover {
+    transform: scale(1.05);
+  }
+  
+  .actions button:first-of-type {
+    background-color: #eeeeee;
+    color: #333;
+  }
+  
+  .actions .danger {
+    background-color: #e53935;
+    color: white;
+  }
+  
+  /* Modal Overlay */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 999;
+  }
+  
+  /* Modal Drawer */
+  .modal {
+    background: #fff;
+    width: 420px;
+    height: 100%;
+    padding: 2rem;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+    animation: slideInFromRight 0.3s ease-out forwards;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  /* Form */
+  .modal form input,
+  .modal form textarea {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+  .modal h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Checkbox */
+  .modal label {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .modal-actions {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  
+  .modal-actions button[type="submit"] {
+    background-color: #1976d2;
+    color: white;
+  }
+  
+  .modal-actions button[type="button"] {
+    background-color: #ddd;
+    color: black;
+  }
+  
