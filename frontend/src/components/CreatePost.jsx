@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Import useNavigate
 import axios from 'axios';
 import { storage } from '../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -12,6 +13,7 @@ function CreatePost({ user }) {
   const [previewUrls, setPreviewUrls] = useState([]);
   const [charCount, setCharCount] = useState(0);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate(); // <-- Initialize navigate
   const MAX_CHARS = 500;
 
   const handleFileChange = (e) => {
@@ -31,7 +33,6 @@ function CreatePost({ user }) {
 
     setMediaFiles(files);
     
-    // Create preview URLs
     const urls = files.map(file => URL.createObjectURL(file));
     setPreviewUrls(urls);
   };
@@ -42,7 +43,7 @@ function CreatePost({ user }) {
     setMediaFiles(newFiles);
     
     const newUrls = [...previewUrls];
-    URL.revokeObjectURL(newUrls[index]); // Free memory
+    URL.revokeObjectURL(newUrls[index]);
     newUrls.splice(index, 1);
     setPreviewUrls(newUrls);
   };
@@ -82,7 +83,6 @@ function CreatePost({ user }) {
         mediaLinks,
       };
 
-      // await axios.post('/api/posts', newPost);
       await axios.post('http://localhost:8080/api/posts', newPost);
       
       // Reset form
@@ -90,8 +90,11 @@ function CreatePost({ user }) {
       setMediaFiles([]);
       setPreviewUrls([]);
       setCharCount(0);
-      
+
       alert('Post created successfully!');
+      
+      // Redirect to Main Page
+      navigate('/'); // <-- Navigate to home or main page
     } catch (err) {
       console.error(err);
       alert('Error creating post. Please try again.');
