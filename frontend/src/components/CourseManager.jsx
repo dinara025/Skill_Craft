@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import './CourseManager.css';
+import '../styles/CourseManager.css';
 
 
 function CourseManager() {
