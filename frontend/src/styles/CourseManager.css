@@ -1,88 +1,165 @@
-/* Background for the whole page */
+/* CourseManager.css */
 
-  /* Semi-transparent wrapper for content */
-  .container {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 12px;
-    margin-top: 30px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* Headings */
-  h2, h4 {
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    color: #343a40;
     text-align: center;
-    color: #1d4774;
-    margin-bottom: 20px;
-    font-weight: 600;
-  }
-  
-  /* Form styling */
-  form {
     margin-bottom: 30px;
-  }
-  
-  .form-group label {
+    font-size: 2rem;
+}
+
+h4 {
+    color: #495057;
+    margin: 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
     font-weight: 600;
-    color: #444;
-  }
-  
-  .form-control {
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    transition: border-color 0.3s ease;
-  }
-  
-  .form-control:focus {
-    border-color: #1d4774;
-    box-shadow: 0 0 5px rgba(29, 71, 116, 0.3);
-  }
-  
-  /* Buttons */
-  .btn {
-    min-width: 130px;
-    font-weight: 500;
-  }
-  
-  .btn-warning,
-  .btn-danger {
-    margin-right: 10px;
-  }
-  
-  .btn-primary {
-    background-color: #1d4774;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.btn {
+    padding: 10px 15px;
     border: none;
-  }
-  
-  .btn-primary:hover {
-    background-color: #16385b;
-  }
-  
-  /* Table styling */
-  .table {
-    background-color: #fff;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  
-  .table th {
-    background-color: #1d4774;
-    color: #fff;
-    text-align: center;
-  }
-  
-  .table td,
-  .table th {
-    vertical-align: middle;
-    text-align: center;
-  }
-  
-  a {
-    color: #1d4774;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.mt-3 {
+    margin-top: 15px;
+}
+
+.ml-2 {
+    margin-left: 10px;
+}
+
+hr {
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 600;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-striped tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
     text-decoration: underline;
-  }
-  
-  a:hover {
-    color: #14385b;
-  }
-  
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px;
+    }
+}
