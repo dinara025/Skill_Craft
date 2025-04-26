@@ -9,32 +9,37 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors().and() // Enable CORS
-            .csrf().disable() // Disable CSRF (if not needed)
-            .authorizeHttpRequests()
-            .requestMatchers("/api/**").permitAll() // Allow unauthenticated access to /api/posts
-            .anyRequest().authenticated(); // Require authentication for other endpoints
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/**").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // 🛑 allow all OPTIONS
+            .anyRequest().authenticated()
+        );
 
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3001");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedOrigins(List.of("http://localhost:3001")); // Allow frontend origin
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow necessary methods
+        configuration.setAllowedHeaders(List.of("*")); // Allow all headers
+        configuration.setAllowCredentials(true); // Allow credentials (if needed)
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
         return source;
     }
 }
