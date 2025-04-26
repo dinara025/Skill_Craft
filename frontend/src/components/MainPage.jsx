@@ -14,7 +14,8 @@ import {
   FaRegBookmark,
   FaEllipsisH,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaBook // Added FaBook for Learning Plans icon
 } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsPlusCircleFill } from 'react-icons/bs';
@@ -42,10 +43,10 @@ const MainPage = ({ user, children }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(null); // Track which post's dropdown is open
+  const [showDropdown, setShowDropdown] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Sample data for when API fails (with timestamps for sorting)
+  // Sample data for when API fails
   const samplePosts = [
     {
       id: 1,
@@ -59,7 +60,7 @@ const MainPage = ({ user, children }) => {
         text: "Just published my new course on Advanced React Patterns! Check it out and let me know what you think. #react #frontend",
         mediaLinks: [
           "https://source.unsplash.com/600x400/?coding,react",
-          "https://source.unsplash.com/600x400/?javascript,code",
+          "https://source.unsplash.com/ 600x400/?javascript,code",
           "https://source.unsplash.com/600x400/?frontend,dev"
         ],
         likes: 142,
@@ -68,7 +69,7 @@ const MainPage = ({ user, children }) => {
         isLiked: false,
         isBookmarked: false,
         time: "2 hours ago",
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
       }
     },
     {
@@ -88,7 +89,7 @@ const MainPage = ({ user, children }) => {
         isLiked: true,
         isBookmarked: true,
         time: "5 hours ago",
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000) // 5 hours ago
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
       }
     }
   ];
@@ -115,7 +116,6 @@ const MainPage = ({ user, children }) => {
         }
         
         if (Array.isArray(data) && data.length > 0) {
-          // Transform data to match the expected post structure
           const transformedPosts = data.map(post => ({
             id: post.id || Math.random().toString(36).substr(2, 9),
             createdAt: post.createdAt,
@@ -138,19 +138,15 @@ const MainPage = ({ user, children }) => {
             }
           }));
 
-          // Sort posts by createdAt in descending order (latest first)
           transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
           setPosts(transformedPosts);
         } else {
           console.log('No posts found or invalid data structure, using sample posts');
-          // Sort sample posts by timestamp
           const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
           setPosts(sortedSamplePosts);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        // Sort sample posts by timestamp
         const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
         setPosts(sortedSamplePosts);
         setError(error.message);
@@ -192,9 +188,6 @@ const MainPage = ({ user, children }) => {
   const handleDeletePost = (postId) => {
     console.log(`Delete post ${postId}`);
     setShowDropdown(null);
-    // Add your delete logic here
-    // For example:
-    // setPosts(posts.filter(post => post.id !== postId));
   };
 
   // Navigation tabs
@@ -205,7 +198,7 @@ const MainPage = ({ user, children }) => {
     { id: 4, name: "Learning" }
   ];
 
-  // Quick actions
+  // Quick actions - Added Learning Plans action
   const quickActions = [
     {
       icon: <BsPlusCircleFill className="action-icon" />,
@@ -223,10 +216,16 @@ const MainPage = ({ user, children }) => {
       icon: <FaChalkboardTeacher className="action-icon" />,
       label: "Start Teaching",
       variant: "outline-success"
+    },
+    {
+      icon: <FaBook className="action-icon" />,
+      label: "Learning Plans",
+      variant: "outline-info",
+      onClick: () => navigate("/learning-plans")
     }
   ];
 
-  // Trending skills (unchanged)
+  // Trending skills
   const trendingSkills = [
     { name: "React.js", posts: 1243 },
     { name: "UI Design", posts: 892 },
@@ -234,7 +233,7 @@ const MainPage = ({ user, children }) => {
     { name: "Digital Marketing", posts: 543 }
   ];
 
-  // Suggested people (unchanged)
+  // Suggested people
   const suggestedPeople = [
     {
       name: "Sarah Miller",
@@ -376,7 +375,6 @@ const MainPage = ({ user, children }) => {
                   </Card.Body>
                 </Card>
               ) : (
-                /* Community Posts */
                 posts.map(post => (
                   <Card key={post.id} className="post-card">
                     {/* Post Header */}
