@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
 import { 
@@ -20,18 +20,15 @@ import Header from '../components/Header';
 import '../styles/MainPage.css';
 
 
-
-
 const MainPage = ({ user, children }) => {
-  // Use the user data from props if available
+  // User data
   const currentUser = user ? {
-    id: user.id,             // MongoDB document ID
-    name: user.username,     // Display username as the name
-    handle: `@${user.username.toLowerCase()}`, // Create handle from username
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg", // Default avatar
-    skills: ["UI/UX", "React", "Figma"] // Default skills (you may want to add these to your User model later)
+    id: user.id,
+    name: user.username,
+    handle: `@${user.username.toLowerCase()}`,
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    skills: ["UI/UX", "React", "Figma"]
   } : {
-    // Fallback data if no user is provided
     name: "Guest User",
     handle: "@guest",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
@@ -40,67 +37,13 @@ const MainPage = ({ user, children }) => {
 
   const navigate = useNavigate();
 
-  // Navigation tabs
-  const tabs = [
-    { id: 1, name: "For You", active: true },
-    { id: 2, name: "Following" },
-    { id: 3, name: "Popular" },
-    { id: 4, name: "Learning" }
-  ];
+  // State for posts
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Quick actions
-  const quickActions = [
-    {
-      icon: <BsPlusCircleFill className="action-icon" />,
-      label: "Create Post",
-      variant: "primary",
-      onClick: () => navigate("/create-post")
-    },
-    {
-      icon: <FaUserPlus className="action-icon" />,
-      label: "Find Friends",
-      variant: "outline-primary",
-      onClick: () => navigate("/follow-system") // Navigate to FollowSystem page
-    },
-    {
-      icon: <FaChalkboardTeacher className="action-icon" />,
-      label: "Start Teaching",
-      variant: "outline-success"
-    }
-  ];
-
-  // Trending skills
-  const trendingSkills = [
-    { name: "React.js", posts: 1243 },
-    { name: "UI Design", posts: 892 },
-    { name: "Python", posts: 765 },
-    { name: "Digital Marketing", posts: 543 }
-  ];
-
-  // Suggested people to follow
-  const suggestedPeople = [
-    {
-      name: "Sarah Miller",
-      handle: "@sarahdesigns",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      skill: "UI/UX Designer"
-    },
-    {
-      name: "Michael Chen",
-      handle: "@michaelcode",
-      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-      skill: "Full Stack Developer"
-    },
-    {
-      name: "Priya Patel",
-      handle: "@priyatech",
-      avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-      skill: "Data Scientist"
-    }
-  ];
-
-  // Community posts
-  const communityPosts = [
+  // Sample data for when API fails
+  const samplePosts = [
     {
       id: 1,
       user: {
@@ -138,25 +81,124 @@ const MainPage = ({ user, children }) => {
         isBookmarked: true,
         time: "5 hours ago"
       }
+    }
+  ];
+
+  // Fetch posts from backend
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:8080/api/posts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+        
+        const text = await response.text();
+        console.log('Raw API response:', text);
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error('Error parsing JSON:', parseError);
+          throw new Error('Invalid JSON response from server');
+        }
+        
+        if (Array.isArray(data) && data.length > 0) {
+          // Transform data to match the expected post structure
+          const transformedPosts = data.map(post => ({
+            id: post.id || Math.random().toString(36).substr(2, 9),
+            user: {
+              name: post.userId || 'Unknown User',
+              handle: `@${(post.userId || 'user').toLowerCase()}`,
+              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
+              verified: false
+            },
+            content: {
+              text: post.content || '',
+              image: post.mediaLinks && post.mediaLinks.length > 0 ? post.mediaLinks[0] : null,
+              likes: post.likes || 0,
+              comments: post.comments || 0,
+              shares: post.shares || 0,
+              isLiked: false,
+              isBookmarked: false,
+              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently'
+            }
+          }));
+          setPosts(transformedPosts);
+        } else {
+          console.log('No posts found or invalid data structure, using sample posts');
+          setPosts(samplePosts);
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        setPosts(samplePosts); // Fallback to sample posts
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  // Navigation tabs
+  const tabs = [
+    { id: 1, name: "For You", active: true },
+    { id: 2, name: "Following" },
+    { id: 3, name: "Popular" },
+    { id: 4, name: "Learning" }
+  ];
+
+  // Quick actions
+  const quickActions = [
+    {
+      icon: <BsPlusCircleFill className="action-icon" />,
+      label: "Create Post",
+      variant: "primary",
+      onClick: () => navigate("/create-post")
     },
     {
-      id: 3,
-      user: {
-        name: "Lisa Ray",
-        handle: "@lisapython",
-        avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-        verified: true
-      },
-      content: {
-        text: "Python developers! I'm hosting a live Q&A tomorrow about Django best practices. Drop your questions below! #python #django",
-        image: "https://source.unsplash.com/600x400/?python,code",
-        likes: 256,
-        comments: 42,
-        shares: 31,
-        isLiked: false,
-        isBookmarked: false,
-        time: "1 day ago"
-      }
+      icon: <FaUserPlus className="action-icon" />,
+      label: "Find Friends",
+      variant: "outline-primary",
+      onClick: () => navigate("/follow-system")
+    },
+    {
+      icon: <FaChalkboardTeacher className="action-icon" />,
+      label: "Start Teaching",
+      variant: "outline-success"
+    }
+  ];
+
+  // Trending skills (unchanged)
+  const trendingSkills = [
+    { name: "React.js", posts: 1243 },
+    { name: "UI Design", posts: 892 },
+    { name: "Python", posts: 765 },
+    { name: "Digital Marketing", posts: 543 }
+  ];
+
+  // Suggested people (unchanged)
+  const suggestedPeople = [
+    {
+      name: "Sarah Miller",
+      handle: "@sarahdesigns",
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+      skill: "UI/UX Designer"
+    },
+    {
+      name: "Michael Chen",
+      handle: "@michaelcode",
+      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
+      skill: "Full Stack Developer"
+    },
+    {
+      name: "Priya Patel",
+      handle: "@priyatech",
+      avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+      skill: "Data Scientist"
     }
   ];
 
@@ -253,68 +295,97 @@ const MainPage = ({ user, children }) => {
                 ))}
               </div>
               
-              {/* Community Posts */}
-              {communityPosts.map(post => (
-                <Card key={post.id} className="post-card">
-                  {/* Post Header */}
-                  <Card.Header className="post-header">
-                    <div className="user-info">
-                      <img 
-                        src={post.user.avatar} 
-                        alt={post.user.name} 
-                        className="user-avatar"
-                      />
-                      <div>
-                        <h6 className="user-name">
-                          {post.user.name}
-                          {post.user.verified && <span className="verified-badge">✓</span>}
-                        </h6>
-                        <p className="user-handle">{post.user.handle} · {post.content.time}</p>
-                      </div>
-                    </div>
-                    <Button variant="link" className="post-options">
-                      <FaEllipsisH />
-                    </Button>
-                  </Card.Header>
-                  
-                  {/* Post Content */}
+              {/* Loading and Error States */}
+              {loading ? (
+                <div className="text-center my-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2">Loading posts...</p>
+                </div>
+              ) : error ? (
+                <Card className="error-card my-3">
                   <Card.Body>
-                    <Card.Text className="post-text">
-                      {post.content.text}
-                    </Card.Text>
-                    {post.content.image && (
-                      <div className="post-image-container">
-                        <img 
-                          src={post.content.image} 
-                          alt="Post content" 
-                          className="post-image"
-                        />
-                      </div>
-                    )}
-                  </Card.Body>
-                  
-                  {/* Post Footer */}
-                  <Card.Footer className="post-footer">
-                    <div className="engagement-actions">
-                      <Button variant="link" className={`like-btn ${post.content.isLiked ? 'liked' : ''}`}>
-                        {post.content.isLiked ? <FaHeart /> : <FaRegHeart />}
-                        <span>{post.content.likes}</span>
-                      </Button>
-                      <Button variant="link" className="comment-btn">
-                        <FaComment />
-                        <span>{post.content.comments}</span>
-                      </Button>
-                      <Button variant="link" className="share-btn">
-                        <FaShare />
-                        <span>{post.content.shares}</span>
-                      </Button>
+                    <div className="text-center text-danger">
+                      <h5>Error loading posts</h5>
+                      <p>{error}</p>
                     </div>
-                    <Button variant="link" className={`bookmark-btn ${post.content.isBookmarked ? 'bookmarked' : ''}`}>
-                      {post.content.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-                    </Button>
-                  </Card.Footer>
+                  </Card.Body>
                 </Card>
-              ))}
+              ) : posts.length === 0 ? (
+                <Card className="my-3">
+                  <Card.Body>
+                    <div className="text-center">
+                      <h5>No posts found</h5>
+                      <p>Be the first to share something!</p>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : (
+                /* Community Posts */
+                posts.map(post => (
+                  <Card key={post.id} className="post-card">
+                    {/* Post Header */}
+                    <Card.Header className="post-header">
+                      <div className="user-info">
+                        <img 
+                          src={post.user.avatar} 
+                          alt={post.user.name} 
+                          className="user-avatar"
+                        />
+                        <div>
+                          <h6 className="user-name">
+                            {post.user.name}
+                            {post.user.verified && <span className="verified-badge">✓</span>}
+                          </h6>
+                          <p className="user-handle">{post.user.handle} · {post.content.time}</p>
+                        </div>
+                      </div>
+                      <Button variant="link" className="post-options">
+                        <FaEllipsisH />
+                      </Button>
+                    </Card.Header>
+                    
+                    {/* Post Content */}
+                    <Card.Body>
+                      <Card.Text className="post-text">
+                        {post.content.text}
+                      </Card.Text>
+                      {post.content.image && (
+                        <div className="post-image-container">
+                          <img 
+                            src={post.content.image} 
+                            alt="Post content" 
+                            className="post-image"
+                            onError={(e) => {e.target.style.display = 'none'}} 
+                          />
+                        </div>
+                      )}
+                    </Card.Body>
+                    
+                    {/* Post Footer */}
+                    <Card.Footer className="post-footer">
+                      <div className="engagement-actions">
+                        <Button variant="link" className={`like-btn ${post.content.isLiked ? 'liked' : ''}`}>
+                          {post.content.isLiked ? <FaHeart /> : <FaRegHeart />}
+                          <span>{post.content.likes}</span>
+                        </Button>
+                        <Button variant="link" className="comment-btn">
+                          <FaComment />
+                          <span>{post.content.comments}</span>
+                        </Button>
+                        <Button variant="link" className="share-btn">
+                          <FaShare />
+                          <span>{post.content.shares}</span>
+                        </Button>
+                      </div>
+                      <Button variant="link" className={`bookmark-btn ${post.content.isBookmarked ? 'bookmarked' : ''}`}>
+                        {post.content.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+                      </Button>
+                    </Card.Footer>
+                  </Card>
+                ))
+              )}
             </Col>
             
             {/* Right Sidebar */}
@@ -335,13 +406,12 @@ const MainPage = ({ user, children }) => {
                 <Card.Body>
                   <h5>Quick Actions</h5>
                   <div className="actions-list">
-                  {quickActions.map((action, index) => (
-                         <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
-                           {action.icon}
-                           {action.label}
-                         </Button>
-                       ))}
-
+                    {quickActions.map((action, index) => (
+                      <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
+                        {action.icon}
+                        {action.label}
+                      </Button>
+                    ))}
                   </div>
                 </Card.Body>
               </Card>
@@ -389,104 +459,3 @@ const MainPage = ({ user, children }) => {
 };
 
 export default MainPage;
-
-// import React from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
-// import { FaSearch, FaUserPlus, FaChalkboardTeacher, FaBookOpen } from 'react-icons/fa';
-// import { BsPlusCircleFill } from 'react-icons/bs';
-// import Header from '../components/Header';
-// import '../styles/MainPage.css';
-
-// const MainPage = ({ user, children }) => {
-//   const currentUser = user ? {
-//     id: user.id,
-//     name: user.username,
-//     handle: `@${user.username.toLowerCase()}`,
-//     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-//     skills: ["UI/UX", "React", "Figma"]
-//   } : {
-//     name: "Guest User",
-//     handle: "@guest",
-//     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-//     skills: []
-//   };
-
-//   const navigate = useNavigate();
-
-//   // Quick actions
-//   const quickActions = [
-//     {
-//       icon: <BsPlusCircleFill className="action-icon" />,
-//       label: "Create Post",
-//       variant: "primary",
-//       onClick: () => navigate("/create-post")
-//     },
-//     {
-//       icon: <FaUserPlus className="action-icon" />,
-//       label: "Find Friends",
-//       variant: "outline-primary",
-//       onClick: () => navigate("/follow-system") // Navigate to FollowSystem page
-//     },
-//     {
-//       icon: <FaChalkboardTeacher className="action-icon" />,
-//       label: "Start Teaching",
-//       variant: "outline-success"
-//     }
-//   ];
-
-//   return (
-//     <div className="skillshare-social">
-//       <Header />
-
-//       <main className="main-content">
-//         <Container fluid>
-//           <Row>
-//             <Col lg={3} className="left-sidebar d-none d-lg-block">
-//               <Card className="profile-card">
-//                 <div className="profile-header">
-//                   <img src={currentUser.avatar} alt={currentUser.name} className="profile-avatar" />
-//                   <div className="profile-info">
-//                     <h5>{currentUser.name}</h5>
-//                     <p className="text-muted">{currentUser.handle}</p>
-//                   </div>
-//                 </div>
-
-//                 <Button variant="outline-primary" className="edit-profile-btn">
-//                   Edit Profile
-//                 </Button>
-//               </Card>
-//             </Col>
-
-//             <Col lg={6} className="main-feed">
-//               <Card className="create-post-card">
-//                 <div className="post-input-container">
-//                   <img src={currentUser.avatar} alt={currentUser.name} className="post-avatar" />
-//                   <Form.Control as="textarea" rows={2} placeholder="Share what you're learning..." className="post-input" />
-//                 </div>
-//               </Card>
-//             </Col>
-
-//             <Col lg={3} className="right-sidebar d-none d-lg-block">
-//               <Card className="quick-actions-card mb-4">
-//                 <Card.Body>
-//                   <h5>Quick Actions</h5>
-//                   <div className="actions-list">
-//                     {quickActions.map((action, index) => (
-//                       <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
-//                         {action.icon}
-//                         {action.label}
-//                       </Button>
-//                     ))}
-//                   </div>
-//                 </Card.Body>
-//               </Card>
-//             </Col>
-//           </Row>
-//         </Container>
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default MainPage;

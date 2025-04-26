@@ -1,105 +1,5 @@
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import { storage } from '../config/firebase';
-// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// import { v4 as uuidv4 } from 'uuid'; // for unique file names
-// import '../styles/CreatePost.css';
-
-// function CreatePost({ user }) {
-//   const [description, setDescription] = useState('');
-//   const [mediaFiles, setMediaFiles] = useState([]);
-//   const [uploading, setUploading] = useState(false);
-
-//   const handleFileChange = (e) => {
-//     const files = Array.from(e.target.files);
-//     const images = files.filter(file => file.type.startsWith('image/'));
-//     const videos = files.filter(file => file.type.startsWith('video/'));
-
-//     if (images.length > 3 || videos.length > 1 || (images.length && videos.length)) {
-//       alert('You can only upload up to 3 images or 1 short video.');
-//       return;
-//     }
-
-//     setMediaFiles(files);
-//   };
-
-//   const uploadMediaToFirebase = async () => {
-//     const uploadPromises = mediaFiles.map(async (file) => {
-//       const fileRef = ref(storage, `posts/${uuidv4()}_${file.name}`);
-//       const snapshot = await uploadBytes(fileRef, file);
-//       return await getDownloadURL(snapshot.ref);
-//     });
-
-//     return await Promise.all(uploadPromises);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!user || !user.id) {
-//       alert('User not logged in!');
-//       return;
-//     }
-
-//     try {
-//       setUploading(true);
-//       const mediaLinks = await uploadMediaToFirebase();
-
-//       const extractedTags = Array.from(new Set(description.match(/#[\w]+/g))) || [];
-
-//       const newPost = {
-//         userId: user.id,
-//         content: description,
-//         tags: extractedTags.map(tag => tag.replace('#', '')),
-//         mediaLinks,
-//       };
-
-//       await axios.post('http://localhost:8080/api/posts', newPost);
-//       alert('Post created successfully!');
-
-//       // Reset form
-//       setDescription('');
-//       setMediaFiles([]);
-//     } catch (err) {
-//       console.error(err);
-//       alert('Error creating post');
-//     } finally {
-//       setUploading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="create-post-container">
-//       <h2>Create New Post</h2>
-//       <form onSubmit={handleSubmit} className="create-post-form">
-//         <textarea
-//           placeholder="Write your post here... (use #hashtags)"
-//           value={description}
-//           onChange={(e) => setDescription(e.target.value)}
-//           required
-//         ></textarea>
-
-//         <input
-//           type="file"
-//           accept="image/*,video/*"
-//           multiple
-//           onChange={handleFileChange}
-//         />
-//         {mediaFiles.length > 0 && (
-//           <p>{mediaFiles.length} media file(s) selected</p>
-//         )}
-
-//         <button type="submit" disabled={uploading}>
-//           {uploading ? 'Uploading...' : 'Create Post'}
-//         </button>
-//       </form>
-//     </div>
-//   );
-// }
-
-// export default CreatePost;
-
-
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Import useNavigate
 import axios from 'axios';
 import { storage } from '../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -113,6 +13,7 @@ function CreatePost({ user }) {
   const [previewUrls, setPreviewUrls] = useState([]);
   const [charCount, setCharCount] = useState(0);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate(); // <-- Initialize navigate
   const MAX_CHARS = 500;
 
   const handleFileChange = (e) => {
@@ -132,7 +33,6 @@ function CreatePost({ user }) {
 
     setMediaFiles(files);
     
-    // Create preview URLs
     const urls = files.map(file => URL.createObjectURL(file));
     setPreviewUrls(urls);
   };
@@ -143,7 +43,7 @@ function CreatePost({ user }) {
     setMediaFiles(newFiles);
     
     const newUrls = [...previewUrls];
-    URL.revokeObjectURL(newUrls[index]); // Free memory
+    URL.revokeObjectURL(newUrls[index]);
     newUrls.splice(index, 1);
     setPreviewUrls(newUrls);
   };
@@ -190,8 +90,11 @@ function CreatePost({ user }) {
       setMediaFiles([]);
       setPreviewUrls([]);
       setCharCount(0);
-      
+
       alert('Post created successfully!');
+      
+      // Redirect to Main Page
+      navigate('/'); // <-- Navigate to home or main page
     } catch (err) {
       console.error(err);
       alert('Error creating post. Please try again.');

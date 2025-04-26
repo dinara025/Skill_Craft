@@ -4,7 +4,8 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
-import CreatePost from './components/CreatePost';
+import CreatePost from './components/CreatePost'; 
+import LearningPlans from './components/LearningPlans'; // Added LearningPlans also
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -28,7 +29,7 @@ function App() {
                 </div>
               </div>
             } />
-            
+
             {/* Redirect any unknown route to login page */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
@@ -43,7 +44,10 @@ function App() {
             {/* Follow System page */}
             <Route path="/follow-system" element={<FollowSystem senderId={loggedInUser.username} />} />
 
-            {/* If unknown path entered after login, redirect to Home */}
+            {/* Learning Plans page */}
+            <Route path="/learning-plans" element={<LearningPlans userId={loggedInUser?.id} />} />
+
+            {/* Redirect any unknown path after login to MainPage */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         )}
