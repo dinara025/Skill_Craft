@@ -120,7 +120,7 @@ const MainPage = ({ user, children }) => {
             id: post.id || Math.random().toString(36).substr(2, 9),
             createdAt: post.createdAt,
             user: {
-              name: post.userId || 'Unknown User',
+              name: post.username || 'Unknown User',
               handle: `@${(post.userId || 'user').toLowerCase()}`,
               avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
               verified: false
