@@ -20,7 +20,7 @@ public class FollowRequestController {
     /**
      * Create a new follow request
      */
-    @PostMapping("/send")
+    @PostMapping("/send")//http://localhost:8080/api/follow/send?senderId=UserA&receiverId=UserB
     public FollowRequest sendFollowRequest(@RequestParam String senderId, @RequestParam String receiverId) {
         return followRequestService.createFollowRequest(senderId, receiverId);
     }
@@ -28,7 +28,7 @@ public class FollowRequestController {
     /**
      * Get all follow requests sent by the user
      */
-    @GetMapping("/sent/{senderId}")
+    @GetMapping("/sent/{senderId}") 
     public List<FollowRequest> getSentRequests(@PathVariable String senderId) {
         return followRequestService.getSentRequests(senderId);
     }
@@ -36,7 +36,7 @@ public class FollowRequestController {
     /**
      * Get all follow requests received by the user
      */
-    @GetMapping("/received/{receiverId}")
+    @GetMapping("/received/{receiverId}") //http://localhost:8080/api/follow/sent/UserA
     public List<FollowRequest> getReceivedRequests(@PathVariable String receiverId) {
         return followRequestService.getReceivedRequests(receiverId);
     }
@@ -44,7 +44,7 @@ public class FollowRequestController {
     /**
      * Update status of a follow request (accepted, declined, unfollow)
      */
-    @PutMapping("/{id}/status")
+    @PutMapping("/{id}/status") //PUT /api/follow/{id}/status?status=accepted
     public FollowRequest updateStatus(@PathVariable String id, @RequestParam String status) {
         return followRequestService.updateRequestStatus(id, status);
     }
@@ -52,7 +52,7 @@ public class FollowRequestController {
     /**
      * Delete a follow request by ID (cancel/unfollow)
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}") //http://localhost:8080/api/follow/id
     public ResponseEntity<Void> deleteRequest(@PathVariable String id) {
         followRequestService.deleteFollowRequest(id);
         return ResponseEntity.noContent().build(); // 204 No Content
