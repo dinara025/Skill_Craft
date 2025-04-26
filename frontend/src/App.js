@@ -6,6 +6,7 @@ import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
 import CreatePost from './components/CreatePost'; 
 import LearningPlans from './components/LearningPlans'; // Added LearningPlans also
+import UpdatePost from './components/UpdatePost';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -49,6 +50,8 @@ function App() {
 
             {/* Redirect any unknown path after login to MainPage */}
             <Route path="*" element={<Navigate to="/" />} />
+
+            <Route path="/update-post/:postId" element={<UpdatePost user={loggedInUser} />} />
           </Routes>
         )}
 

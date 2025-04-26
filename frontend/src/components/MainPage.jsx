@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, InputGroup, Dropdown } from 'react-bootstrap';
 import { 
   FaSearch, 
   FaUserPlus, 
@@ -12,7 +12,9 @@ import {
   FaShare,
   FaBookmark,
   FaRegBookmark,
-  FaEllipsisH
+  FaEllipsisH,
+  FaEdit,
+  FaTrash
 } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsPlusCircleFill } from 'react-icons/bs';
@@ -40,6 +42,8 @@ const MainPage = ({ user, children }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(null); // Track which post's dropdown is open
+  const dropdownRef = useRef(null);
 
   // Sample data for when API fails (with timestamps for sorting)
   const samplePosts = [
@@ -157,6 +161,41 @@ const MainPage = ({ user, children }) => {
 
     fetchPosts();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Toggle dropdown for a specific post
+  const toggleDropdown = (postId) => {
+    setShowDropdown(showDropdown === postId ? null : postId);
+  };
+
+  // Handle edit post
+  const handleEditPost = (postId) => {
+    console.log(`Edit post ${postId}`);
+    setShowDropdown(null);
+    navigate(`/update-post/${postId}`);
+  };
+
+  // Handle delete post
+  const handleDeletePost = (postId) => {
+    console.log(`Delete post ${postId}`);
+    setShowDropdown(null);
+    // Add your delete logic here
+    // For example:
+    // setPosts(posts.filter(post => post.id !== postId));
+  };
 
   // Navigation tabs
   const tabs = [
@@ -356,9 +395,32 @@ const MainPage = ({ user, children }) => {
                           <p className="user-handle">{post.user.handle} · {post.content.time}</p>
                         </div>
                       </div>
-                      <Button variant="link" className="post-options">
-                        <FaEllipsisH />
-                      </Button>
+                      <div className="post-options-container" ref={dropdownRef}>
+                        <Button 
+                          variant="link" 
+                          className="post-options"
+                          onClick={() => toggleDropdown(post.id)}
+                        >
+                          <FaEllipsisH />
+                        </Button>
+                        
+                        {/* Dropdown Menu */}
+                        {showDropdown === post.id && (
+                          <Dropdown show className="post-dropdown-menu">
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleEditPost(post.id)}>
+                                <FaEdit className="me-2" /> Edit Post
+                              </Dropdown.Item>
+                              <Dropdown.Item 
+                                onClick={() => handleDeletePost(post.id)}
+                                className="text-danger"
+                              >
+                                <FaTrash className="me-2" /> Delete Post
+                              </Dropdown.Item>
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        )}
+                      </div>
                     </Card.Header>
                     
                     {/* Post Content */}
