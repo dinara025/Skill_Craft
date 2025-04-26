@@ -1,0 +1,88 @@
+/* Background for the whole page */
+
+  /* Semi-transparent wrapper for content */
+  .container {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 12px;
+    margin-top: 30px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Headings */
+  h2, h4 {
+    text-align: center;
+    color: #1d4774;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  
+  /* Form styling */
+  form {
+    margin-bottom: 30px;
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    color: #444;
+  }
+  
+  .form-control {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #1d4774;
+    box-shadow: 0 0 5px rgba(29, 71, 116, 0.3);
+  }
+  
+  /* Buttons */
+  .btn {
+    min-width: 130px;
+    font-weight: 500;
+  }
+  
+  .btn-warning,
+  .btn-danger {
+    margin-right: 10px;
+  }
+  
+  .btn-primary {
+    background-color: #1d4774;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #16385b;
+  }
+  
+  /* Table styling */
+  .table {
+    background-color: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .table th {
+    background-color: #1d4774;
+    color: #fff;
+    text-align: center;
+  }
+  
+  .table td,
+  .table th {
+    vertical-align: middle;
+    text-align: center;
+  }
+  
+  a {
+    color: #1d4774;
+    text-decoration: underline;
+  }
+  
+  a:hover {
+    color: #14385b;
+  }
+  
