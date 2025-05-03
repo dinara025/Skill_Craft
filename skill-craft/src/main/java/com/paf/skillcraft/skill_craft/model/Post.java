@@ -3,6 +3,7 @@ package com.paf.skillcraft.skill_craft.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "posts")
@@ -15,6 +16,8 @@ public class Post {
     private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<String> likes; // List of user IDs who liked the post
+    private int likeCount; // Like count
 
     // Getters and Setters
     public String getId() {
@@ -71,5 +74,39 @@ public class Post {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<String> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(List<String> likes) {
+        this.likes = likes;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    // Method to add a like
+    public void addLike(String userId) {
+        if (likes == null) {
+            likes = new ArrayList<>();
+        }
+        if (!likes.contains(userId)) {
+            likes.add(userId);
+            likeCount++; // Increment the like count
+        }
+    }
+
+    // Method to remove a like
+    public void removeLike(String userId) {
+        if (likes != null && likes.remove(userId)) {
+            likeCount--; // Decrement the like count
+        }
     }
 }

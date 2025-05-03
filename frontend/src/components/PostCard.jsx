@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Dropdown } from 'react-bootstrap';
+import axios from 'axios';
 import {
   FaHeart,
   FaRegHeart,
@@ -32,22 +33,38 @@ const PostCard = ({
   const navigate = useNavigate();
   const dropdownRef = useRef(null); // Moved dropdownRef to PostCard
 
-  const handleLikeToggle = () => {
-    setPosts(prevPosts =>
-      prevPosts.map(p =>
-        p.id === post.id
-          ? {
-              ...p,
-              content: {
-                ...p.content,
-                isLiked: !p.content.isLiked,
-                likes: p.content.isLiked ? p.content.likes - 1 : p.content.likes + 1
+
+  const handleLikeToggle = async () => {
+    try {
+      const endpoint = post.content.isLiked
+        ? `/api/posts/${post.id}/unlike/${userId}`
+        : `/api/posts/${post.id}/like/${userId}`;
+  
+      console.log("Calling endpoint:", `http://localhost:8080/api/posts/${post.id}/like/${userId}`); // ✅ log this
+  
+      const response = await axios.put(`http://localhost:8080/api/posts/${post.id}/like/${userId}`);
+      const updatedPost = response.data;
+  
+      setPosts(prevPosts =>
+        prevPosts.map(p =>
+          p.id === post.id
+            ? {
+                ...p,
+                content: {
+                  ...p.content,
+                  isLiked: updatedPost.likedUsers.includes(userId),
+                  likes: updatedPost.likedUsers.length
+                }
               }
-            }
-          : p
-      )
-    );
+            : p
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+    }
   };
+  
+
 
   const handleBookmarkToggle = () => {
     setPosts(prevPosts =>

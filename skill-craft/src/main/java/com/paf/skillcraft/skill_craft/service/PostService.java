@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 public class PostService {
@@ -26,6 +27,8 @@ public class PostService {
     public Post createPost(Post post) {
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
+        post.setLikeCount(0);  // Initialize likeCount to 0
+        post.setLikes(new ArrayList<>()); // Initialize likes list
         return postRepository.save(post);
     }
 
@@ -67,7 +70,7 @@ public class PostService {
     public List<PostResponseDto> getAllPostsWithUserDetails() {
         List<Post> posts = postRepository.findAll();
     
-        return posts.stream().map((Post post) -> { // Explicitly define the parameter type
+        return posts.stream().map((Post post) -> {
             User user = userRepository.findById(post.getUserId()).orElse(null);
     
             PostResponseDto dto = new PostResponseDto();
@@ -79,8 +82,38 @@ public class PostService {
             dto.setMediaLinks(post.getMediaLinks());
             dto.setTags(post.getTags());
             dto.setCreatedAt(post.getCreatedAt());
-            return dto; // Explicit return of PostResponseDto
+            dto.setLikeCount(post.getLikeCount()); // Add the likeCount to the DTO
+            return dto;
         }).collect(Collectors.toList());
     }
-    
+
+    // Add like to post
+    // PostService.java
+
+    public Post addLike(String postId, String userId) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            if (!post.getLikes().contains(userId)) {
+                post.addLike(userId); // Add the like and update likeCount
+                post.setLikeCount(post.getLikes().size()); // Update like count based on the list size
+                return postRepository.save(post);
+            }
+        }
+        return null;
+    }
+
+
+    // Remove like from post
+    public Post removeLike(String postId, String userId) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            if (post.getLikes().contains(userId)) {
+                post.removeLike(userId); // Remove the like and update likeCount
+                return postRepository.save(post);
+            }
+        }
+        return null;
+    }
 }
