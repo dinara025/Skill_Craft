@@ -12,12 +12,13 @@ public class PostResponseDto {
     private String userId;
     private String username;
     private String avatar;
+    private int likeCount;  // Add likeCount field
 
     // Constructors
     public PostResponseDto() {}
 
     public PostResponseDto(String id, String content, List<String> mediaLinks, List<String> tags,
-                           LocalDateTime createdAt, String userId, String username, String avatar) {
+                           LocalDateTime createdAt, String userId, String username, String avatar, int likeCount) {
         this.id = id;
         this.content = content;
         this.mediaLinks = mediaLinks;
@@ -26,6 +27,7 @@ public class PostResponseDto {
         this.userId = userId;
         this.username = username;
         this.avatar = avatar;
+        this.likeCount = likeCount;  // Initialize likeCount
     }
 
     // Getters and Setters
@@ -92,5 +94,12 @@ public class PostResponseDto {
     public void setAvatar(String avatar) {
         this.avatar = avatar;
     }
-}
 
+    public int getLikeCount() {
+        return likeCount;  // Getter for likeCount
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;  // Setter for likeCount
+    }
+}

@@ -183,3 +183,13 @@
     font-size: 0.9rem;
     color: #4b5563;
   }
+
+  .like-btn.liked {
+    color: red; /* Red color for liked state */
+  }
+  
+  .like-btn {
+    color: #000; /* Default color for like button */
+    transition: color 0.3s; /* Smooth color transition */
+  }
+  

@@ -13,7 +13,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-    
+
     @Autowired
     private PostService postService;
 
@@ -22,16 +22,10 @@ public class PostController {
         return postService.createPost(post);
     }
 
-    // @GetMapping
-    // public List<Post> getAllPosts() {
-    //     return postService.getAllPosts();
-    // }
-
     @GetMapping
     public List<PostResponseDto> getAllPosts() {
         return postService.getAllPostsWithUserDetails();
     }
-
 
     @GetMapping("/{id}")
     public Optional<Post> getPostById(@PathVariable String id) {
@@ -52,4 +46,18 @@ public class PostController {
     public void deletePost(@PathVariable String id) {
         postService.deletePost(id);
     }
+
+    // Endpoint to add a like to a post
+    @PutMapping("/{id}/like/{userId}")
+    public Post addLikeToPost(@PathVariable String id, @PathVariable String userId) {
+        return postService.addLike(id, userId);
+    }
+
+    // Endpoint to remove a like from a post
+    @PutMapping("/{id}/unlike/{userId}")
+    public Post removeLikeFromPost(@PathVariable String id, @PathVariable String userId) {
+        return postService.removeLike(id, userId);
+    }
+
+    
 }
