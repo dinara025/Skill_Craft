@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, Dropdown } from 'react-bootstrap';
 import {
   FaHeart,
@@ -13,7 +14,6 @@ import {
 } from 'react-icons/fa';
 import {
   formatDistanceToNow,
-  parseISO,
   differenceInDays,
   format
 } from 'date-fns';
@@ -23,14 +23,15 @@ const PostCard = ({
   post,
   showDropdown,
   toggleDropdown,
-  handleEditPost,
   handleDeletePost,
-  dropdownRef,
-  setPosts
+  setPosts,
+  userId,
+  isPostOwner
 }) => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null); // Moved dropdownRef to PostCard
 
-  // Handle like toggle
   const handleLikeToggle = () => {
     setPosts(prevPosts =>
       prevPosts.map(p =>
@@ -48,7 +49,6 @@ const PostCard = ({
     );
   };
 
-  // Handle bookmark toggle
   const handleBookmarkToggle = () => {
     setPosts(prevPosts =>
       prevPosts.map(p =>
@@ -65,7 +65,16 @@ const PostCard = ({
     );
   };
 
-  // Handle swipe navigation
+  const handleEditPost = () => {
+    if (!isPostOwner) {
+      console.warn(`User ${userId} is not authorized to edit post ${post.id}`);
+      return;
+    }
+    
+    toggleDropdown(null);
+    navigate(`/update-post/${post.id}`, { state: { post } });
+  };
+
   const handleNextMedia = () => {
     if (post.content.mediaLinks && currentMediaIndex < post.content.mediaLinks.length - 1) {
       setCurrentMediaIndex(currentMediaIndex + 1);
@@ -78,7 +87,6 @@ const PostCard = ({
     }
   };
 
-  // Handle touch swipe
   const [touchStartX, setTouchStartX] = useState(null);
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
@@ -96,7 +104,6 @@ const PostCard = ({
     setTouchStartX(null);
   };
 
-  // Format time display
   let timeAgo = 'Just now';
   try {
     if (post?.content?.time) {
@@ -116,7 +123,6 @@ const PostCard = ({
 
   return (
     <Card className="post-card">
-      {/* Post Header */}
       <Card.Header className="post-header">
         <div className="user-info">
           <img
@@ -132,33 +138,34 @@ const PostCard = ({
             <p className="user-handle">{timeAgo}</p>
           </div>
         </div>
-        <div className="post-options-container" ref={dropdownRef}>
-          <Button
-            variant="link"
-            className="post-options"
-            onClick={() => toggleDropdown(post.id)}
-          >
-            <FaEllipsisH />
-          </Button>
-          {showDropdown === post.id && (
-            <Dropdown show className="post-dropdown-menu">
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => handleEditPost(post.id)}>
-                  <FaEdit className="me-2" /> Edit Post
-                </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() => handleDeletePost(post.id)}
-                  className="text-danger"
-                >
-                  <FaTrash className="me-2" /> Delete Post
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          )}
-        </div>
+        {isPostOwner && (
+          <div className="post-options-container" ref={dropdownRef}>
+            <Button
+              variant="link"
+              className="post-options"
+              onClick={() => toggleDropdown(post.id)}
+            >
+              <FaEllipsisH />
+            </Button>
+            {showDropdown === post.id && (
+              <Dropdown show className="post-dropdown-menu">
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleEditPost}>
+                    <FaEdit className="me-2" /> Edit Post
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={() => handleDeletePost(post.id)}
+                    className="text-danger"
+                  >
+                    <FaTrash className="me-2" /> Delete Post
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
+          </div>
+        )}
       </Card.Header>
 
-      {/* Post Content */}
       <Card.Body>
         <Card.Text className="post-text">{post.content.text}</Card.Text>
         {post.content.mediaLinks && post.content.mediaLinks.length > 0 && (
@@ -183,7 +190,7 @@ const PostCard = ({
                   onClick={handlePrevMedia}
                   disabled={currentMediaIndex === 0}
                 >
-                  &larr;
+                  ←
                 </Button>
                 <div className="media-dots">
                   {post.content.mediaLinks.map((_, index) => (
@@ -200,7 +207,7 @@ const PostCard = ({
                   onClick={handleNextMedia}
                   disabled={currentMediaIndex === post.content.mediaLinks.length - 1}
                 >
-                  &rarr;
+                  →
                 </Button>
               </div>
             )}
@@ -215,7 +222,6 @@ const PostCard = ({
         )}
       </Card.Body>
 
-      {/* Post Footer */}
       <Card.Footer className="post-footer">
         <div className="engagement-actions">
           <Button

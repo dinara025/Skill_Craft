@@ -51,7 +51,8 @@ function App() {
             {/* Redirect any unknown path after login to MainPage */}
             <Route path="*" element={<Navigate to="/" />} />
 
-            <Route path="/update-post/:postId" element={<UpdatePost user={loggedInUser} />} />
+            <Route path="/update-post/:id" element={<UpdatePost user={loggedInUser} />} />
+
           </Routes>
         )}
 
