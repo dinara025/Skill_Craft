@@ -5,6 +5,8 @@ import com.paf.skillcraft.skill_craft.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +22,16 @@ public class PostController {
         return postService.createPost(post);
     }
 
+    // @GetMapping
+    // public List<Post> getAllPosts() {
+    //     return postService.getAllPosts();
+    // }
+
     @GetMapping
-    public List<Post> getAllPosts() {
-        return postService.getAllPosts();
+    public List<PostResponseDto> getAllPosts() {
+        return postService.getAllPostsWithUserDetails();
     }
+
 
     @GetMapping("/{id}")
     public Optional<Post> getPostById(@PathVariable String id) {
