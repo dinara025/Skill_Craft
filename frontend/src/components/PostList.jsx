@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import PostCard from './PostCard';
 import '../styles/PostList.css';
@@ -9,10 +8,7 @@ const PostList = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(null);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
 
-  // Sample data for when API fails
   const samplePosts = [
     {
       id: 1,
@@ -34,14 +30,38 @@ const PostList = ({ userId }) => {
         shares: 12,
         isLiked: false,
         isBookmarked: false,
+        time: "1 hour ago",
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
+      },
+      tags: ["react", "frontend"],
+      userId: String(userId), // Ensure userId is a string
+      createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: 2,
+      user: {
+        name: "John Doe",
+        handle: "@johndoe",
+        avatar: "https://randomuser.me/api/portraits/men/44.jpg",
+        verified: false
+      },
+      content: {
+        text: "Exploring new CSS tricks today! #webdev #css",
+        mediaLinks: ["https://source.unsplash.com/600x400/?css,code"],
+        likes: 85,
+        comments: 15,
+        shares: 7,
+        isLiked: false,
+        isBookmarked: false,
         time: "2 hours ago",
         timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
       },
-      tags: ["react", "frontend"]
+      tags: ["webdev", "css"],
+      userId: "otherUser",
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     }
   ];
 
-  // Fetch posts from backend
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -53,7 +73,7 @@ const PostList = ({ userId }) => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const text = await response.text();
-        console.log('Raw response:', text);
+        console.log('Raw API response:', text);
 
         let data;
         try {
@@ -66,7 +86,7 @@ const PostList = ({ userId }) => {
         if (Array.isArray(data) && data.length > 0) {
           const transformedPosts = data.map(post => ({
             id: post.id || Math.random().toString(36).substr(2, 9),
-            createdAt: post.createdAt,
+            createdAt: post.createdAt || new Date().toISOString(),
             user: {
               name: post.username || 'Unknown User',
               handle: `@${(post.userId || 'user').toLowerCase()}`,
@@ -84,19 +104,23 @@ const PostList = ({ userId }) => {
               time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently',
               timestamp: post.createdAt ? new Date(post.createdAt) : new Date()
             },
-            tags: post.tags || []
+            tags: post.tags || [],
+            userId: String(post.userId || 'unknown') // Normalize userId to string
           }));
 
           transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setPosts(transformedPosts);
+          console.log('Transformed posts:', transformedPosts);
+          console.log('Logged-in userId:', userId);
         } else {
           console.log('No posts found, using sample posts');
-          const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
+          const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setPosts(sortedSamplePosts);
+          console.log('Sample posts:', sortedSamplePosts);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        const sortedSamplePosts = [...samplePosts].sort((a, b) => b.content.timestamp - a.content.timestamp);
+        const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setPosts(sortedSamplePosts);
         setError(error.message);
       } finally {
@@ -104,40 +128,53 @@ const PostList = ({ userId }) => {
       }
     };
 
-    fetchPosts();
-  }, []);
+    if (userId) {
+      fetchPosts();
+    } else {
+      console.warn('No userId provided, using sample posts');
+      setPosts(samplePosts);
+      setLoading(false);
+    }
+  }, [userId]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Toggle dropdown for a specific post
   const toggleDropdown = (postId) => {
-    setShowDropdown(showDropdown === postId ? null : postId);
+    setShowDropdown(prev => (prev === postId ? null : postId));
+    console.log('Toggled dropdown for post:', postId, 'showDropdown:', showDropdown);
   };
 
-  // Handle edit post
-  const handleEditPost = (postId) => {
-    console.log(`Edit post ${postId}`);
-    setShowDropdown(null);
-    navigate(`/update-post/${postId}`);
-  };
+  const handleDeletePost = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+      console.error('Post not found:', postId);
+      setError('Post not found');
+      return;
+    }
 
-  // Handle delete post
-  const handleDeletePost = (postId) => {
-    console.log(`Delete post ${postId}`);
-    setShowDropdown(null);
-    setPosts(posts.filter(post => post.id !== postId));
+    if (post.userId !== String(userId)) {
+      console.warn(`User ${userId} is not authorized to delete post ${postId} (owned by ${post.userId})`);
+      setError('You are not authorized to delete this post');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      setPosts(prevPosts => {
+        const updatedPosts = prevPosts.filter(p => p.id !== postId);
+        console.log('Updated posts after deletion:', updatedPosts);
+        return updatedPosts;
+      });
+      setShowDropdown(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      setError('Failed to delete post');
+    }
   };
 
   return (
@@ -174,10 +211,10 @@ const PostList = ({ userId }) => {
             post={post}
             showDropdown={showDropdown}
             toggleDropdown={toggleDropdown}
-            handleEditPost={handleEditPost}
             handleDeletePost={handleDeletePost}
-            dropdownRef={dropdownRef}
             setPosts={setPosts}
+            userId={String(userId)} // Ensure userId is a string
+            isPostOwner={post.userId === String(userId)}
           />
         ))
       )}
