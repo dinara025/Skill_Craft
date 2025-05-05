@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
 import {
@@ -12,10 +12,23 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
 import PostList from '../components/PostList';
+import NavBar from '../components/NavBar';
 import '../styles/MainPage.css';
 
 const MainPage = ({ user }) => {
-  // User data
+
+  const navigate = useNavigate();
+
+  // ------------------ 🔥 STATE FOR NAVBAR (Sidebar) ------------------
+  const [showNavBar, setShowNavBar] = useState(false);
+
+  // ------------------ LOGOUT ------------------
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('jwtUsername');
+    window.location.reload();
+  };
+
   const currentUser = user ? {
     id: user.id,
     name: user.username,
@@ -29,8 +42,6 @@ const MainPage = ({ user }) => {
     skills: []
   };
 
-  const navigate = useNavigate();
-
   // Navigation tabs
   const tabs = [
     { id: 1, name: "For You", active: true },
@@ -39,7 +50,6 @@ const MainPage = ({ user }) => {
     { id: 4, name: "Learning" }
   ];
 
-  // Quick actions
   const quickActions = [
     {
       icon: <BsPlusCircleFill className="action-icon" />,
@@ -66,7 +76,6 @@ const MainPage = ({ user }) => {
     }
   ];
 
-  // Trending skills
   const trendingSkills = [
     { name: "React.js", posts: 1243 },
     { name: "UI Design", posts: 892 },
@@ -74,7 +83,6 @@ const MainPage = ({ user }) => {
     { name: "Digital Marketing", posts: 543 }
   ];
 
-  // Suggested people
   const suggestedPeople = [
     {
       name: "Sarah Miller",
@@ -98,10 +106,16 @@ const MainPage = ({ user }) => {
 
   return (
     <div className="skillshare-social">
-      <Header />
+      {/* 🔥 Pass the click event to open the NavBar */}
+      <Header onMenuClick={() => setShowNavBar(true)} />
+
+      {/* 🔥 Show NavBar only if showNavBar is true */}
+      {showNavBar && <NavBar onClose={() => setShowNavBar(false)} />}
+
       <main className="main-content">
         <Container fluid>
           <Row>
+
             {/* Left Sidebar */}
             <Col lg={3} className="left-sidebar d-none d-lg-block">
               <Card className="profile-card">
@@ -127,7 +141,11 @@ const MainPage = ({ user }) => {
                 <Button variant="outline-primary" className="edit-profile-btn">
                   Edit Profile
                 </Button>
+                <Button variant="danger" className="mt-2" onClick={handleLogout}>
+                  Logout
+                </Button>
               </Card>
+
               <Card className="trending-card">
                 <Card.Body>
                   <h5>Trending Skills</h5>
@@ -145,7 +163,6 @@ const MainPage = ({ user }) => {
 
             {/* Main Content */}
             <Col lg={6} className="main-feed">
-              {/* Create Post */}
               <Card className="create-post-card">
                 <div className="post-input-container">
                   <img
@@ -173,7 +190,6 @@ const MainPage = ({ user }) => {
                 </div>
               </Card>
 
-              {/* Feed Tabs */}
               <div className="feed-tabs">
                 {tabs.map(tab => (
                   <button
@@ -185,7 +201,6 @@ const MainPage = ({ user }) => {
                 ))}
               </div>
 
-              {/* Post List */}
               <PostList userId={currentUser.id} />
             </Col>
 
@@ -252,6 +267,7 @@ const MainPage = ({ user }) => {
                 <span className="notification-count">3</span>
               </Button>
             </Col>
+
           </Row>
         </Container>
       </main>
