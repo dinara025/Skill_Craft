@@ -15,23 +15,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable in production!)
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable later!)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()  // Allow login, register
-                .anyRequest().authenticated()  // Protect all other APIs
+                .requestMatchers("/api/auth/**").permitAll()  // Public: register, login
+                .requestMatchers("/api/**").authenticated()   // Everything else under /api/ requires login
             )
-            .httpBasic();  // You can change this to JWT later
+            .httpBasic();  // You can switch to JWT later if needed
 
         return http.build();
     }
 
-    // For authenticating users
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // Password encoder bean (for hashing passwords)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

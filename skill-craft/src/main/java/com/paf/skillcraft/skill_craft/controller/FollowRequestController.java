@@ -65,4 +65,12 @@ public class FollowRequestController {
     public Optional<FollowRequest> getFollowRequest(@PathVariable String id) {
         return followRequestService.getRequestById(id);
     }
+
+    /**
+     * Test API to check security protection
+     */
+    @GetMapping("/test-protected")
+    public String testProtectedFollowAPI() {
+        return "This is a protected follow system API.";
+    }
 }
