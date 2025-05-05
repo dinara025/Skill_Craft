@@ -1,6 +1,8 @@
 package com.paf.skillcraft.skill_craft.controller;
 
 import com.paf.skillcraft.skill_craft.model.User;
+import com.paf.skillcraft.skill_craft.security.CustomUserDetails;
+import com.paf.skillcraft.skill_craft.security.JwtUtil;
 import com.paf.skillcraft.skill_craft.service.UserService;
 
 import java.util.List;
@@ -10,12 +12,15 @@ import org.springframework.http.ResponseEntity;  // To return better responses
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")  // ✅ Changed to /api/auth to match the SecurityConfig public route
+@RequestMapping("/api/auth")  // Matches SecurityConfig public route
 @CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // ----------- REGISTER -----------
     @PostMapping("/register")
@@ -27,14 +32,20 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
-    // ----------- LOGIN -----------
+    // ----------- LOGIN (Returns JWT) -----------
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         User user = userService.login(username, password);
+
         if (user == null) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
-        return ResponseEntity.ok(user);
+
+        // --- Create JWT ---
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        String jwtToken = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(jwtToken);
     }
 
     // ----------- GET ALL USERS -----------
