@@ -12,11 +12,14 @@ public class User {
     private String username;
     private String password;
 
+    private String role = "USER";  // NEW: default role
+
     public User() {}
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.role = "USER";  // Assign default role
     }
 
     // Getters and Setters
@@ -28,4 +31,8 @@ public class User {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }
+
