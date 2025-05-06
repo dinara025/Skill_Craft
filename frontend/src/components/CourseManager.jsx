@@ -1,29 +1,33 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import '../styles/CourseManager.css';
+import './CourseManager.css';
 
 
 function CourseManager() {
   const [id, setId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState('beginner');
   const [pdfUrl, setPdfUrl] = useState('');
   const [courses, setCourses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 5;
+
 
   useEffect(() => {
     loadCourses();
   }, []);
 
   const loadCourses = async () => {
-    const result = await axios.get("http://localhost:8081/api/v1/course/all");
+    const result = await axios.get("http://localhost:8080/api/v1/course/all");
     setCourses(result.data);
   };
 
   const saveCourse = async (event) => {
     event.preventDefault();
     try {
-      await axios.post("http://localhost:8081/api/v1/course/add", {
+      await axios.post("http://localhost:8080/api/v1/course/add", {
         title, description, category, pdfUrl
       });
       alert("Course Added Successfully");
@@ -37,10 +41,10 @@ function CourseManager() {
   const updateCourse = async (event) => {
     event.preventDefault();
     try {
-      await axios.put(`http://localhost:8081/api/v1/course/update/${id}`, {
+      await axios.put(`http://localhost:8080/api/v1/course/update/${id}`, {
         title, description, category, pdfUrl
       });
-      alert("Course Updated Successfully");
+      alert("Course Updated.");
       clearForm();
       loadCourses();
     } catch (error) {
@@ -49,7 +53,7 @@ function CourseManager() {
   };
 
   const deleteCourse = async (courseId) => {
-    await axios.delete(`http://localhost:8081/api/v1/course/delete/${courseId}`);
+    await axios.delete(`http://localhost:8080/api/v1/course/delete/${courseId}`);
     alert("Course Deleted");
     loadCourses();
   };

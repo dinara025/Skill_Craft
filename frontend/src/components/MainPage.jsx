@@ -168,7 +168,8 @@ const MainPage = ({ user, children }) => {
     {
       icon: <FaChalkboardTeacher className="action-icon" />,
       label: "Start Teaching",
-      variant: "outline-success"
+      variant: "outline-success",
+      onClick: () => navigate("/Learning")
     }
   ];
 

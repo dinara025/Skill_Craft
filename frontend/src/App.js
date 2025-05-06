@@ -6,6 +6,7 @@ import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
 import CreatePost from './components/CreatePost'; 
 import LearningPlans from './components/LearningPlans'; // Added LearningPlans also
+import Course from './components/CourseManager';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -49,6 +50,9 @@ function App() {
 
             {/* Redirect any unknown path after login to MainPage */}
             <Route path="*" element={<Navigate to="/" />} />
+
+            {/* course management page */}
+            <Route path="/Learning" element={<Course />} />
           </Routes>
         )}
 
