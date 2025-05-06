@@ -40,8 +40,11 @@ const LearningPlans = ({ user }) => {
   const [showNavBar, setShowNavBar] = useState(false);
   const navigate = useNavigate();
 
+  //get user id from localStorage
   const userId = localStorage.getItem('usersId');
 
+
+  // fetching the plans for the user
   useEffect(() => {
     if (userId) fetchPlans();
   }, [userId]);
