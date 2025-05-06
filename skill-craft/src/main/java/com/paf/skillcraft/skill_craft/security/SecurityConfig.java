@@ -20,7 +20,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (you can enable later)
+            .cors() // ✅ ENABLE CORS globally (important!)
+            .and()
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable in production)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()  // Login & Register → open
                 .requestMatchers("/api/**").authenticated()   // All other APIs → need JWT

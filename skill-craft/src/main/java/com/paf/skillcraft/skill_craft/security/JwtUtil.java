@@ -13,7 +13,7 @@ public class JwtUtil {
 
     private final String SECRET_KEY = "SkillCraftSuperSecretKeySkillCraftSuperSecretKey"; // 64+ bits for HS256
 
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 10; // 10 hours
+    private final long EXPIRATION_TIME = 1000 * 60 * 2; // 10 hours
 
     // --- Generate token ---
     public String generateToken(UserDetails userDetails) {
