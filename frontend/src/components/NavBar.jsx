@@ -46,7 +46,7 @@ function NavBar({ onClose }) {
             <FaUsers className="nav-icon" />
             <span>Communities</span>
           </Link>
-          <Link to="/learning" className="nav-item">
+          <Link to="/learning-plans" className="nav-item">
             <FaBook className="nav-icon" />
             <span>Learning</span>
           </Link>
