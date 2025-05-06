@@ -1,101 +1,164 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Card } from 'react-bootstrap';
+import PostCard from './PostCard';
+import { getAuthHeaders } from '../services/authService'; // ✅ Import JWT header function
 import '../styles/PostList.css';
 
 const PostList = ({ userId }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(null);
+
+  const samplePosts = [/* unchanged samplePosts array */];
 
   useEffect(() => {
     const fetchPosts = async () => {
+      setLoading(true);
       try {
         const response = await fetch('http://localhost:8080/api/posts', {
           headers: {
+            ...getAuthHeaders().headers,  // ✅ Attach JWT headers
             'Accept': 'application/json'
           }
         });
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const text = await response.text(); // Get raw response
-        console.log('Raw response:', text); // Log raw response
+
+        const text = await response.text();
+        console.log('Raw API response:', text);
+
+        let data;
         try {
-          const data = JSON.parse(text); // Attempt to parse
-          const transformedPosts = data.map(post => ({
-            id: post.id,
-            user: {
-              name: post.userId,
-              handle: `@${post.userId.toLowerCase()}`,
-              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
-              verified: false
-            },
-            content: {
-              text: post.content,
-              image: post.mediaLinks && post.mediaLinks.length > 0 ? post.mediaLinks[0] : null,
-              likes: 0,
-              comments: 0,
-              shares: 0,
-              isLiked: false,
-              isBookmarked: false,
-              time: new Date(post.createdAt).toLocaleString()
-            }
-          }));
-          setPosts(transformedPosts);
+          data = JSON.parse(text);
         } catch (jsonError) {
           console.error('JSON parse error:', jsonError);
           throw new Error('Invalid JSON response');
         }
+
+        if (Array.isArray(data) && data.length > 0) {
+          const transformedPosts = data.map(post => ({
+            id: post.id || Math.random().toString(36).substr(2, 9),
+            createdAt: post.createdAt || new Date().toISOString(),
+            user: {
+              name: post.username || 'Unknown User',
+              handle: `@${(post.userId || 'user').toLowerCase()}`,
+              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
+              verified: false
+            },
+            content: {
+              text: post.content || '',
+              mediaLinks: post.mediaLinks || [],
+              likes: post.likes || 0,
+              comments: post.comments || 0,
+              shares: post.shares || 0,
+              isLiked: false,
+              isBookmarked: false,
+              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently',
+              timestamp: post.createdAt ? new Date(post.createdAt) : new Date()
+            },
+            tags: post.tags || [],
+            userId: String(post.userId || 'unknown')
+          }));
+
+          transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setPosts(transformedPosts);
+        } else {
+          const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setPosts(sortedSamplePosts);
+        }
       } catch (error) {
         console.error('Error fetching posts:', error);
+        const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setPosts(sortedSamplePosts);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
-  
-    fetchPosts();
-  }, []);
 
-  if (loading) return <div className="loading">Loading...</div>;
-  if (error) return <div className="error">{error}</div>;
+    fetchPosts();
+  }, [userId]);
+
+  const toggleDropdown = (postId) => {
+    setShowDropdown(prev => (prev === postId ? null : postId));
+  };
+
+  const handleDeletePost = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+      setError('Post not found');
+      return;
+    }
+
+    if (post.userId !== String(userId)) {
+      setError('You are not authorized to delete this post');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          ...getAuthHeaders().headers,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+      setShowDropdown(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      setError('Failed to delete post');
+    }
+  };
 
   return (
     <div className="post-list-container">
-      <h2>All Posts</h2>
-      {posts.length === 0 ? (
-        <p className="no-posts">No posts available.</p>
-      ) : (
-        <div className="posts">
-          {posts.map((post) => (
-            <div key={post.id} className="post">
-              <p className="post-content">{post.content}</p>
-              {post.mediaLinks && post.mediaLinks.length > 0 && (
-                <div className="media">
-                  {post.mediaLinks.map((link, index) => (
-                    <img
-                      key={index}
-                      src={link}
-                      alt={`Media ${index}`}
-                      className="media-image"
-                      onError={(e) => (e.target.style.display = 'none')}
-                    />
-                  ))}
-                </div>
-              )}
-              {post.tags && post.tags.length > 0 && (
-                <div className="tags">
-                  {post.tags.map((tag, index) => (
-                    <span key={index} className="tag">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <p className="post-meta">
-                Posted by User {post.userId} on{' '}
-                {new Date(post.createdAt).toLocaleString()}
-              </p>
-            </div>
-          ))}
+      {loading ? (
+        <div className="text-center my-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading posts...</p>
         </div>
+      ) : error ? (
+        <Card className="error-card my-3">
+          <Card.Body>
+            <div className="text-center text-danger">
+              <h5>Error loading posts</h5>
+              <p>{error}</p>
+            </div>
+          </Card.Body>
+        </Card>
+      ) : posts.length === 0 ? (
+        <Card className="my-3">
+          <Card.Body>
+            <div className="text-center">
+              <h5>No posts found</h5>
+              <p>Be the first to share something!</p>
+            </div>
+          </Card.Body>
+        </Card>
+      ) : (
+        posts.map(post => (
+          <PostCard
+            key={post.id}
+            post={post}
+            showDropdown={showDropdown}
+            toggleDropdown={toggleDropdown}
+            handleDeletePost={handleDeletePost}
+            setPosts={setPosts}
+            userId={String(userId)}
+            isPostOwner={post.userId === String(userId)}
+          />
+        ))
       )}
     </div>
   );

@@ -8,12 +8,22 @@ const LoginForm = ({ onLogin }) => {
   const handleLogin = async () => {
     try {
       const res = await loginUser(username, password);
+
       if (res.data) {
+        const token = res.data;
+
         alert('Login successful');
-        onLogin(res.data);
+
+        // ✅ Save token to localStorage
+        localStorage.setItem('jwtToken', token);
+
+        // ✅ Pass username & token to parent App
+        onLogin({ username, token });
+
       } else {
         alert('Invalid username or password');
       }
+
     } catch (err) {
       console.error(err);
       alert('Login failed');

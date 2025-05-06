@@ -15,24 +15,40 @@ public class FollowRequestService {
     private FollowRequestRepository followRequestRepository;
 
     public FollowRequest createFollowRequest(String senderId, String receiverId) {
+
+        // Check if the same direction request exists
         List<FollowRequest> existing = followRequestRepository.findBySenderIdAndReceiverId(senderId, receiverId);
-        
+
         if (!existing.isEmpty()) {
             FollowRequest existingRequest = existing.get(0);
             String status = existingRequest.getStatus();
-    
+
             // Only block if current status is not 'unfollow' or 'declined'
             if (!"unfollow".equalsIgnoreCase(status) && !"declined".equalsIgnoreCase(status)) {
-                return existingRequest;
+                return existingRequest; // Already exists, no need to create new
             }
-    
-            // Otherwise, create a NEW follow request
         }
-    
+
+        // Check if reverse direction request exists (receiver -> sender)
+        List<FollowRequest> reverse = followRequestRepository.findBySenderIdAndReceiverId(receiverId, senderId);
+
+        if (!reverse.isEmpty()) {
+            FollowRequest reverseRequest = reverse.get(0);
+            String reverseStatus = reverseRequest.getStatus();
+
+            // ✅ If reverse request already accepted, allow sender to follow back
+            if ("accepted".equalsIgnoreCase(reverseStatus)) {
+                // Allow creating new request
+            } else if (!"unfollow".equalsIgnoreCase(reverseStatus) && !"declined".equalsIgnoreCase(reverseStatus)) {
+                // If reverse request is still pending or not unfollow/declined → block new request
+                return reverseRequest;
+            }
+        }
+
+        // Otherwise, create a NEW follow request
         FollowRequest newRequest = new FollowRequest(senderId, receiverId);
         return followRequestRepository.save(newRequest);
     }
-    
 
     public List<FollowRequest> getSentRequests(String senderId) {
         return followRequestRepository.findBySenderId(senderId);

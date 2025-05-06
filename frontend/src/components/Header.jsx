@@ -14,7 +14,7 @@ function Header({ onMenuClick }) {
     <header className="header">
       <div className="header-left">
         <button className="menu-button" onClick={onMenuClick}>
-          <FaBars />
+          <FaBars />  {/* 👈 Just the menu icon */}
         </button>
         <img src="/skill_craft_logo.png" alt="SkillCraft Logo" className="logo" />
       </div>

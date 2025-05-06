@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { FaHome, FaUsers, FaBook, FaBell, FaCog, FaPlusCircle } from 'react-icons/fa';
-import { Link } from 'react-router-dom'; // <-- import this
+import { FaHome, FaUsers, FaBook, FaBell, FaCog, FaPlusCircle, FaTimes } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import '../styles/NavBar.css';
 
 function NavBar({ onClose }) {
@@ -9,7 +9,11 @@ function NavBar({ onClose }) {
   useEffect(() => {
     function handleClickOutside(event) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        onClose();
+        if (typeof onClose === 'function') {   // ✅ Safety check added
+          onClose();
+        } else {
+          console.warn('onClose is not a function');
+        }
       }
     }
 
@@ -22,8 +26,15 @@ function NavBar({ onClose }) {
   return (
     <div className="sidebar-overlay">
       <div className="sidebar" ref={sidebarRef}>
+
         <div className="sidebar-logo">
           <img src="/skill_craft_logo.png" alt="SkillCraft" />
+          {/* ✅ Close button inside the sidebar */}
+          <button className="close-button" onClick={() => {
+            if (typeof onClose === 'function') onClose();
+          }}>
+            <FaTimes />
+          </button>
         </div>
 
         <nav className="sidebar-nav">
@@ -35,7 +46,7 @@ function NavBar({ onClose }) {
             <FaUsers className="nav-icon" />
             <span>Communities</span>
           </Link>
-          <Link to="/learning" className="nav-item">
+          <Link to="/learning-plans" className="nav-item">
             <FaBook className="nav-icon" />
             <span>Learning</span>
           </Link>
@@ -55,6 +66,7 @@ function NavBar({ onClose }) {
             <span>Settings</span>
           </Link>
         </div>
+
       </div>
     </div>
   );

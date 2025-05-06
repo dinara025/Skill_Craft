@@ -1,27 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
-import { 
-  FaSearch, 
-  FaUserPlus, 
-  FaChalkboardTeacher, 
-  FaBookOpen,
-  FaHeart, 
-  FaRegHeart,
-  FaComment,
-  FaShare,
-  FaBookmark,
-  FaRegBookmark,
-  FaEllipsisH
+import {
+  FaSearch,
+  FaUserPlus,
+  FaChalkboardTeacher,
+  FaBook,
+  FaBookOpen
 } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
+import PostList from '../components/PostList';
+import NavBar from '../components/NavBar';
 import '../styles/MainPage.css';
 
+const MainPage = ({ user }) => {
 
-const MainPage = ({ user, children }) => {
-  // User data
+  const navigate = useNavigate();
+
+  // ------------------ 🔥 STATE FOR NAVBAR (Sidebar) ------------------
+  const [showNavBar, setShowNavBar] = useState(false);
+
+  // ------------------ LOGOUT ------------------
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('jwtUsername');
+    window.location.reload();
+  };
+
   const currentUser = user ? {
     id: user.id,
     name: user.username,
@@ -35,114 +42,6 @@ const MainPage = ({ user, children }) => {
     skills: []
   };
 
-  const navigate = useNavigate();
-
-  // State for posts
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Sample data for when API fails
-  const samplePosts = [
-    {
-      id: 1,
-      user: {
-        name: "Emma Watson",
-        handle: "@emmawcodes",
-        avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-        verified: true
-      },
-      content: {
-        text: "Just published my new course on Advanced React Patterns! Check it out and let me know what you think. #react #frontend",
-        image: "https://source.unsplash.com/600x400/?coding,react",
-        likes: 142,
-        comments: 28,
-        shares: 12,
-        isLiked: false,
-        isBookmarked: false,
-        time: "2 hours ago"
-      }
-    },
-    {
-      id: 2,
-      user: {
-        name: "David Kim",
-        handle: "@davidux",
-        avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-        verified: false
-      },
-      content: {
-        text: "Sharing my latest Figma tutorial on creating responsive components. Who's working on UI design this weekend? #figma #uidesign",
-        image: "https://source.unsplash.com/600x400/?figma,design",
-        likes: 89,
-        comments: 15,
-        shares: 5,
-        isLiked: true,
-        isBookmarked: true,
-        time: "5 hours ago"
-      }
-    }
-  ];
-
-  // Fetch posts from backend
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('http://localhost:8080/api/posts');
-        if (!response.ok) {
-          throw new Error('Failed to fetch posts');
-        }
-        
-        const text = await response.text();
-        console.log('Raw API response:', text);
-        
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (parseError) {
-          console.error('Error parsing JSON:', parseError);
-          throw new Error('Invalid JSON response from server');
-        }
-        
-        if (Array.isArray(data) && data.length > 0) {
-          // Transform data to match the expected post structure
-          const transformedPosts = data.map(post => ({
-            id: post.id || Math.random().toString(36).substr(2, 9),
-            user: {
-              name: post.userId || 'Unknown User',
-              handle: `@${(post.userId || 'user').toLowerCase()}`,
-              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
-              verified: false
-            },
-            content: {
-              text: post.content || '',
-              image: post.mediaLinks && post.mediaLinks.length > 0 ? post.mediaLinks[0] : null,
-              likes: post.likes || 0,
-              comments: post.comments || 0,
-              shares: post.shares || 0,
-              isLiked: false,
-              isBookmarked: false,
-              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently'
-            }
-          }));
-          setPosts(transformedPosts);
-        } else {
-          console.log('No posts found or invalid data structure, using sample posts');
-          setPosts(samplePosts);
-        }
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-        setPosts(samplePosts); // Fallback to sample posts
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
   // Navigation tabs
   const tabs = [
     { id: 1, name: "For You", active: true },
@@ -151,7 +50,6 @@ const MainPage = ({ user, children }) => {
     { id: 4, name: "Learning" }
   ];
 
-  // Quick actions
   const quickActions = [
     {
       icon: <BsPlusCircleFill className="action-icon" />,
@@ -168,12 +66,21 @@ const MainPage = ({ user, children }) => {
     {
       icon: <FaChalkboardTeacher className="action-icon" />,
       label: "Start Teaching",
+
       variant: "outline-success",
       onClick: () => navigate("/Learning")
+
+   
+    },
+    {
+      icon: <FaBook className="action-icon" />,
+      label: "Learning Plans",
+      variant: "outline-info",
+      onClick: () => navigate("/learning-plans")
+
     }
   ];
 
-  // Trending skills (unchanged)
   const trendingSkills = [
     { name: "React.js", posts: 1243 },
     { name: "UI Design", posts: 892 },
@@ -181,7 +88,6 @@ const MainPage = ({ user, children }) => {
     { name: "Digital Marketing", posts: 543 }
   ];
 
-  // Suggested people (unchanged)
   const suggestedPeople = [
     {
       name: "Sarah Miller",
@@ -205,18 +111,23 @@ const MainPage = ({ user, children }) => {
 
   return (
     <div className="skillshare-social">
-      <Header />
-      
+      {/* 🔥 Pass the click event to open the NavBar */}
+      <Header onMenuClick={() => setShowNavBar(true)} />
+
+      {/* 🔥 Show NavBar only if showNavBar is true */}
+      {showNavBar && <NavBar onClose={() => setShowNavBar(false)} />}
+
       <main className="main-content">
         <Container fluid>
           <Row>
+
             {/* Left Sidebar */}
             <Col lg={3} className="left-sidebar d-none d-lg-block">
               <Card className="profile-card">
                 <div className="profile-header">
-                  <img 
-                    src={currentUser.avatar} 
-                    alt={currentUser.name} 
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
                     className="profile-avatar"
                   />
                   <div className="profile-info">
@@ -224,7 +135,6 @@ const MainPage = ({ user, children }) => {
                     <p className="text-muted">{currentUser.handle}</p>
                   </div>
                 </div>
-                
                 <div className="profile-skills">
                   <h6>My Skills</h6>
                   <div className="skills-list">
@@ -233,12 +143,14 @@ const MainPage = ({ user, children }) => {
                     ))}
                   </div>
                 </div>
-                
                 <Button variant="outline-primary" className="edit-profile-btn">
                   Edit Profile
                 </Button>
+                <Button variant="danger" className="mt-2" onClick={handleLogout}>
+                  Logout
+                </Button>
               </Card>
-              
+
               <Card className="trending-card">
                 <Card.Body>
                   <h5>Trending Skills</h5>
@@ -253,21 +165,20 @@ const MainPage = ({ user, children }) => {
                 </Card.Body>
               </Card>
             </Col>
-            
+
             {/* Main Content */}
             <Col lg={6} className="main-feed">
-              {/* Create Post */}
               <Card className="create-post-card">
                 <div className="post-input-container">
-                  <img 
-                    src={currentUser.avatar} 
-                    alt={currentUser.name} 
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
                     className="post-avatar"
                   />
-                  <Form.Control 
-                    as="textarea" 
-                    rows={2} 
-                    placeholder="Share what you're learning..." 
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    placeholder="Share what you're learning..."
                     className="post-input"
                   />
                 </div>
@@ -283,132 +194,44 @@ const MainPage = ({ user, children }) => {
                   </Button>
                 </div>
               </Card>
-              
-              {/* Feed Tabs */}
+
               <div className="feed-tabs">
                 {tabs.map(tab => (
-                  <button 
-                    key={tab.id} 
+                  <button
+                    key={tab.id}
                     className={`tab-btn ${tab.active ? 'active' : ''}`}
                   >
                     {tab.name}
                   </button>
                 ))}
               </div>
-              
-              {/* Loading and Error States */}
-              {loading ? (
-                <div className="text-center my-4">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <p className="mt-2">Loading posts...</p>
-                </div>
-              ) : error ? (
-                <Card className="error-card my-3">
-                  <Card.Body>
-                    <div className="text-center text-danger">
-                      <h5>Error loading posts</h5>
-                      <p>{error}</p>
-                    </div>
-                  </Card.Body>
-                </Card>
-              ) : posts.length === 0 ? (
-                <Card className="my-3">
-                  <Card.Body>
-                    <div className="text-center">
-                      <h5>No posts found</h5>
-                      <p>Be the first to share something!</p>
-                    </div>
-                  </Card.Body>
-                </Card>
-              ) : (
-                /* Community Posts */
-                posts.map(post => (
-                  <Card key={post.id} className="post-card">
-                    {/* Post Header */}
-                    <Card.Header className="post-header">
-                      <div className="user-info">
-                        <img 
-                          src={post.user.avatar} 
-                          alt={post.user.name} 
-                          className="user-avatar"
-                        />
-                        <div>
-                          <h6 className="user-name">
-                            {post.user.name}
-                            {post.user.verified && <span className="verified-badge">✓</span>}
-                          </h6>
-                          <p className="user-handle">{post.user.handle} · {post.content.time}</p>
-                        </div>
-                      </div>
-                      <Button variant="link" className="post-options">
-                        <FaEllipsisH />
-                      </Button>
-                    </Card.Header>
-                    
-                    {/* Post Content */}
-                    <Card.Body>
-                      <Card.Text className="post-text">
-                        {post.content.text}
-                      </Card.Text>
-                      {post.content.image && (
-                        <div className="post-image-container">
-                          <img 
-                            src={post.content.image} 
-                            alt="Post content" 
-                            className="post-image"
-                            onError={(e) => {e.target.style.display = 'none'}} 
-                          />
-                        </div>
-                      )}
-                    </Card.Body>
-                    
-                    {/* Post Footer */}
-                    <Card.Footer className="post-footer">
-                      <div className="engagement-actions">
-                        <Button variant="link" className={`like-btn ${post.content.isLiked ? 'liked' : ''}`}>
-                          {post.content.isLiked ? <FaHeart /> : <FaRegHeart />}
-                          <span>{post.content.likes}</span>
-                        </Button>
-                        <Button variant="link" className="comment-btn">
-                          <FaComment />
-                          <span>{post.content.comments}</span>
-                        </Button>
-                        <Button variant="link" className="share-btn">
-                          <FaShare />
-                          <span>{post.content.shares}</span>
-                        </Button>
-                      </div>
-                      <Button variant="link" className={`bookmark-btn ${post.content.isBookmarked ? 'bookmarked' : ''}`}>
-                        {post.content.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-                      </Button>
-                    </Card.Footer>
-                  </Card>
-                ))
-              )}
+
+              <PostList userId={currentUser.id} />
             </Col>
-            
+
             {/* Right Sidebar */}
             <Col lg={3} className="right-sidebar d-none d-lg-block">
-              {/* Search */}
               <InputGroup className="search-bar mb-4">
                 <InputGroup.Text>
                   <FaSearch />
                 </InputGroup.Text>
-                <Form.Control 
-                  type="search" 
-                  placeholder="Search skills, people, posts..." 
+                <Form.Control
+                  type="search"
+                  placeholder="Search skills, people, posts..."
                 />
               </InputGroup>
-              
-              {/* Quick Actions */}
+
               <Card className="quick-actions-card mb-4">
                 <Card.Body>
                   <h5>Quick Actions</h5>
                   <div className="actions-list">
                     {quickActions.map((action, index) => (
-                      <Button key={index} variant={action.variant} className="action-btn" onClick={action.onClick}>
+                      <Button
+                        key={index}
+                        variant={action.variant}
+                        className="action-btn"
+                        onClick={action.onClick}
+                      >
                         {action.icon}
                         {action.label}
                       </Button>
@@ -416,21 +239,19 @@ const MainPage = ({ user, children }) => {
                   </div>
                 </Card.Body>
               </Card>
-              
-              {/* Suggested People */}
+
               <Card className="suggested-people-card">
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="mb-0">Suggested People</h5>
                     <Button variant="link" className="see-all-btn">See All</Button>
                   </div>
-                  
                   <div className="people-list">
                     {suggestedPeople.map((person, index) => (
                       <div key={index} className="person-item">
-                        <img 
-                          src={person.avatar} 
-                          alt={person.name} 
+                        <img
+                          src={person.avatar}
+                          alt={person.name}
                           className="person-avatar"
                         />
                         <div className="person-info">
@@ -445,13 +266,13 @@ const MainPage = ({ user, children }) => {
                   </div>
                 </Card.Body>
               </Card>
-              
-              {/* Notifications */}
+
               <Button variant="light" className="notifications-btn">
                 <IoMdNotificationsOutline size={20} />
                 <span className="notification-count">3</span>
               </Button>
             </Col>
+
           </Row>
         </Container>
       </main>

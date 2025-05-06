@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- Import useNavigate
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { storage } from '../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import '../styles/CreatePost.css';
+import { createPost } from '../services/postService'; // ✅ use postService for JWT
 
 function CreatePost({ user }) {
   const [description, setDescription] = useState('');
@@ -13,91 +13,124 @@ function CreatePost({ user }) {
   const [previewUrls, setPreviewUrls] = useState([]);
   const [charCount, setCharCount] = useState(0);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate(); // <-- Initialize navigate
+  const navigate = useNavigate();
+
   const MAX_CHARS = 500;
+  const MAX_MEDIA = 3;
+  const MAX_VIDEO_DURATION = 30;
 
-  const handleFileChange = (e) => {
+  
+
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
-    const images = files.filter(file => file.type.startsWith('image/'));
-    const videos = files.filter(file => file.type.startsWith('video/'));
-
-    if (images.length > 3 || videos.length > 1 || (images.length && videos.length)) {
-      alert('You can only upload up to 3 images or 1 video (not both)');
+    if (mediaFiles.length + files.length > MAX_MEDIA) {
+      alert(`You can upload up to ${MAX_MEDIA} media files.`);
       return;
     }
 
-    if (videos.length > 0 && files[0].size > 50 * 1024 * 1024) { // 50MB limit
-      alert('Video file size should be less than 50MB');
-      return;
+    const validFiles = [];
+    const invalidFiles = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        invalidFiles.push(`${file.name} (invalid type)`);
+        continue;
+      }
+
+      if (file.type.startsWith('video/')) {
+        try {
+          const duration = await getVideoDuration(file);
+          if (duration > MAX_VIDEO_DURATION) {
+            invalidFiles.push(`${file.name} (video too long)`);
+            continue;
+          }
+        } catch {
+          invalidFiles.push(`${file.name} (error reading video)`);
+          continue;
+        }
+      }
+
+      validFiles.push(file);
     }
 
-    setMediaFiles(files);
-    
-    const urls = files.map(file => URL.createObjectURL(file));
-    setPreviewUrls(urls);
+    if (invalidFiles.length > 0) {
+      alert(`Invalid files:\n${invalidFiles.join(', ')}`);
+    }
+
+    if (validFiles.length > 0) {
+      setMediaFiles(prev => [...prev, ...validFiles]);
+      setPreviewUrls(prev => [...prev, ...validFiles.map(file => URL.createObjectURL(file))]);
+    }
+
+    if (e.target) e.target.value = null;
+  };
+
+  const getVideoDuration = (file) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        resolve(video.duration);
+      };
+      video.onerror = reject;
+      video.src = URL.createObjectURL(file);
+    });
   };
 
   const removeMedia = (index) => {
     const newFiles = [...mediaFiles];
-    newFiles.splice(index, 1);
-    setMediaFiles(newFiles);
-    
     const newUrls = [...previewUrls];
+    newFiles.splice(index, 1);
     URL.revokeObjectURL(newUrls[index]);
     newUrls.splice(index, 1);
+    setMediaFiles(newFiles);
     setPreviewUrls(newUrls);
   };
 
   const uploadMediaToFirebase = async () => {
-    const uploadPromises = mediaFiles.map(async (file) => {
+    const uploadTasks = mediaFiles.map(async (file) => {
       const fileRef = ref(storage, `posts/${uuidv4()}_${file.name}`);
       const snapshot = await uploadBytes(fileRef, file);
       return await getDownloadURL(snapshot.ref);
     });
-
-    return await Promise.all(uploadPromises);
+    return await Promise.all(uploadTasks);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !user.id) {
-      alert('Please login to create a post');
+
+    if (!user) {
+      alert('Please log in to create a post.');
       return;
     }
 
     if (description.trim().length === 0) {
-      alert('Post content cannot be empty');
+      alert('Post content cannot be empty.');
       return;
     }
 
     try {
       setUploading(true);
-      const mediaLinks = mediaFiles.length > 0 ? await uploadMediaToFirebase() : [];
-
+      const mediaLinks = await uploadMediaToFirebase();
       const extractedTags = Array.from(new Set(description.match(/#[\w]+/g))) || [];
 
-      const newPost = {
-        userId: user.id,
+      const postPayload = {
+        userId: user,
         content: description,
         tags: extractedTags.map(tag => tag.replace('#', '')),
         mediaLinks,
       };
 
-      await axios.post('http://localhost:8080/api/posts', newPost);
-      
-      // Reset form
+      await createPost(postPayload); // ✅ send with JWT headers
+      alert('Post created successfully!');
       setDescription('');
+      setCharCount(0);
       setMediaFiles([]);
       setPreviewUrls([]);
-      setCharCount(0);
-
-      alert('Post created successfully!');
-      
-      // Redirect to Main Page
-      navigate('/'); // <-- Navigate to home or main page
-    } catch (err) {
-      console.error(err);
-      alert('Error creating post. Please try again.');
+      navigate('/');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Something went wrong. Try again.');
     } finally {
       setUploading(false);
     }
@@ -112,7 +145,7 @@ function CreatePost({ user }) {
   };
 
   const triggerFileInput = () => {
-    fileInputRef.current.click();
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   return (
@@ -143,14 +176,7 @@ function CreatePost({ user }) {
                     <source src={url} type={mediaFiles[index].type} />
                   </video>
                 )}
-                <button 
-                  type="button" 
-                  className="remove-media" 
-                  onClick={() => removeMedia(index)}
-                  aria-label="Remove media"
-                >
-                  &times;
-                </button>
+                <button type="button" className="remove-media" onClick={() => removeMedia(index)}>×</button>
               </div>
             ))}
           </div>
@@ -165,34 +191,16 @@ function CreatePost({ user }) {
             ref={fileInputRef}
             style={{ display: 'none' }}
           />
-          
-          <button 
-            type="button" 
-            className="upload-btn"
-            onClick={triggerFileInput}
-          >
-            <i className="icon-camera"></i> {mediaFiles.length > 0 ? 'Add More' : 'Add Media'}
+          <button type="button" className="upload-btn" onClick={triggerFileInput} disabled={mediaFiles.length >= MAX_MEDIA || uploading}>
+            📷 {mediaFiles.length > 0 ? 'Add More' : 'Add Media'}
           </button>
-          
           {mediaFiles.length > 0 && (
             <div className="media-info">
               {mediaFiles.length} file{mediaFiles.length !== 1 ? 's' : ''} selected
-              {mediaFiles.some(f => f.type.startsWith('video/')) && ' (Video)'}
             </div>
           )}
-          
-          <button 
-            type="submit" 
-            className="submit-btn"
-            disabled={uploading || description.trim().length === 0}
-          >
-            {uploading ? (
-              <>
-                <span className="spinner"></span> Posting...
-              </>
-            ) : (
-              'Post'
-            )}
+          <button type="submit" className="submit-btn" disabled={uploading || description.trim().length === 0}>
+            {uploading ? <><span className="spinner"></span> Posting...</> : 'Post'}
           </button>
         </div>
       </form>
