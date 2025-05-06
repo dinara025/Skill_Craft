@@ -1,0 +1,113 @@
+/* Gradient Background */
+.login-body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(to right, #6366f1, #9333ea);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-section {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+  }
+  
+  .login-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    border: 4px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Login Box */
+  .login-container {
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 40px 30px;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .login-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #1f2937;
+  }
+  
+  .login-header p {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  
+  .login-form input {
+    height: 40px;
+    margin-bottom: 15px;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    padding: 0 15px;
+    font-size: 16px;
+  }
+  
+  .forgot-password {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
+  
+  .forgot-password button {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .login-button {
+    height: 40px;
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #4f46e5;
+  }
+  
+  .signup-text {
+    text-align: center;
+    font-size: 14px;
+  }
+  
+  .signup-text button {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+  }
+  
