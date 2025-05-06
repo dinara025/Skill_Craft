@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { getAuthHeaders } from './authService'; // ✅ Get JWT header
 
-const API_BASE = 'http://localhost:8080/api/posts';
+const API_BASE = 'http://localhost:8080/api/auth/posts';
 
 // Fetch all posts
 export const fetchAllPosts = () =>
