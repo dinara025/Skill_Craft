@@ -14,6 +14,14 @@ function CourseManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 5;
 
+  const difficultyLevels = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+    { value: 'expert', label: 'Expert' }
+  ];
+
+
 
   useEffect(() => {
     loadCourses();
