@@ -6,6 +6,7 @@ import com.paf.skillcraft.skill_craft.security.JwtUtil;
 import com.paf.skillcraft.skill_craft.service.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;  // To return better responses
@@ -53,4 +54,12 @@ public class UserController {
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
+
+    @GetMapping("/userDetails/{username}")
+    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    Optional<User> user = userService.getUserByUsername(username);
+    return user.map(ResponseEntity::ok)
+               .orElseGet(() -> ResponseEntity.notFound().build());
+}
+
 }

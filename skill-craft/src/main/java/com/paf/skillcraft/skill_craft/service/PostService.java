@@ -76,7 +76,7 @@ public class PostService {
             PostResponseDto dto = new PostResponseDto();
             dto.setId(post.getId());
             dto.setUserId(post.getUserId());
-            dto.setUsername(user != null ? user.getUsername() : "Unknown");
+            dto.setUsername(user != null ? user.getUsername() : "U");
             // dto.setAvatar(user != null ? user.getAvatar() : "default.png");
             dto.setContent(post.getContent());
             dto.setMediaLinks(post.getMediaLinks());
