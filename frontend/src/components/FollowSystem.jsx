@@ -7,8 +7,8 @@ import {
   deleteRequest
 } from '../services/followService';
 import { getAllUsers } from '../services/authService';
-import { Tab, Nav, Button, ListGroup, Badge, Form, InputGroup } from 'react-bootstrap';
-import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaUserMinus, FaUserClock } from 'react-icons/fa';
+import { Tab, Nav, Button, ListGroup, Form, InputGroup } from 'react-bootstrap';
+import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaUserClock, FaUserMinus } from 'react-icons/fa';
 import '../styles/FollowSystem.css';
 
 const FollowSystem = ({ senderId }) => {
@@ -29,16 +29,34 @@ const FollowSystem = ({ senderId }) => {
 
   const loadUsers = async () => {
     const res = await getAllUsers();
-    const blockedUsernames = sentRequests
+
+    const mySent = sentRequests
       .filter(req => req.status === 'pending' || req.status === 'accepted')
       .map(req => req.receiverId);
+
     const filteredUsers = res.data.filter(user => {
       const isSelf = user.username === senderId;
-      const isBlocked = blockedUsernames.includes(user.username);
-      const isAlreadyFriend = friends.includes(user.username);
-      return !isSelf && !isBlocked && !isAlreadyFriend;
+      const iSent = mySent.includes(user.username);
+      return !isSelf && !iSent;
     });
+
     setAllUsers(filteredUsers);
+  };
+
+  const computeMutuals = () => {
+    const outgoingAccepted = sentRequests
+      .filter(r => r.status === 'accepted')
+      .map(r => r.receiverId);
+
+    const incomingAccepted = receivedRequests
+      .filter(r => r.status === 'accepted')
+      .map(r => r.senderId);
+
+    const allFriends = [...new Set([...outgoingAccepted, ...incomingAccepted])];
+    setFriends(allFriends);
+
+    const mutuals = outgoingAccepted.filter(user => incomingAccepted.includes(user));
+    setMutualFriends(mutuals);
   };
 
   useEffect(() => {
@@ -50,38 +68,38 @@ const FollowSystem = ({ senderId }) => {
   useEffect(() => {
     if (senderId) {
       loadUsers();
+      computeMutuals();
     }
-  }, [sentRequests]);
-
-  useEffect(() => {
-    const outgoingAccepted = sentRequests.filter(r => r.status === 'accepted').map(r => r.receiverId);
-    const incomingAccepted = receivedRequests.filter(r => r.status === 'accepted').map(r => r.senderId);
-    const allFriends = [...new Set([...outgoingAccepted, ...incomingAccepted])];
-    setFriends(allFriends);
-
-    const mutuals = outgoingAccepted.filter(user => incomingAccepted.includes(user));
-    setMutualFriends(mutuals);
   }, [sentRequests, receivedRequests]);
 
   const handleSend = (receiverId) => {
     sendFollowRequest(senderId, receiverId).then(() => {
       refreshData();
-      loadUsers();
     });
   };
 
   const handleAction = (id, status) => {
     updateRequestStatus(id, status).then(() => {
       refreshData();
-      loadUsers();
     });
   };
 
   const handleDelete = (id) => {
     deleteRequest(id).then(() => {
       refreshData();
-      loadUsers();
     });
+  };
+
+  const handleUnfollow = (friendUsername) => {
+    // Find the follow request where *I* am sender and status accepted
+    const request = sentRequests.find(
+      req => req.receiverId === friendUsername && req.status === 'accepted'
+    );
+    if (request) {
+      handleDelete(request.id);
+    } else {
+      alert('Cannot unfollow this user (maybe they followed you instead)');
+    }
   };
 
   const filteredUsers = allUsers.filter(user =>
@@ -207,13 +225,21 @@ const FollowSystem = ({ senderId }) => {
             )}
           </Tab.Pane>
 
-          {/* Friends */}
+          {/* Followers */}
           <Tab.Pane eventKey="followers">
             {friends.length > 0 ? (
               <ListGroup>
                 {friends.map(friendUsername => (
                   <ListGroup.Item key={friendUsername}>
                     {friendUsername}
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleUnfollow(friendUsername)}
+                      className="float-end"
+                    >
+                      <FaUserMinus /> Unfollow
+                    </Button>
                   </ListGroup.Item>
                 ))}
               </ListGroup>
@@ -229,6 +255,14 @@ const FollowSystem = ({ senderId }) => {
                 {mutualFriends.map(username => (
                   <ListGroup.Item key={username}>
                     {username}
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleUnfollow(username)}
+                      className="float-end"
+                    >
+                      <FaUserMinus /> Unfollow
+                    </Button>
                   </ListGroup.Item>
                 ))}
               </ListGroup>
@@ -236,7 +270,6 @@ const FollowSystem = ({ senderId }) => {
               <div className="empty-state">No mutual friends</div>
             )}
           </Tab.Pane>
-
         </Tab.Content>
       </Tab.Container>
     </div>
