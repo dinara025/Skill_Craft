@@ -22,7 +22,7 @@ function App() {
   
     const fetchUserDetails = async (username, token) => {
       try {
-        const response = await fetch(`http://localhost:8080/userDetails/${username}`, {
+        const response = await fetch(`http://localhost:8080/api/auth/userDetails/${username}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: 'application/json',
