@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/posts")
 public class PostController {
 
@@ -36,6 +37,11 @@ public class PostController {
     public List<Post> getPostsByUser(@PathVariable String userId) {
         return postService.getPostsByUser(userId);
     }
+
+    // @GetMapping("/user/{username}")
+    // public List<Post> getPostsByUsername(@PathVariable String username) {
+    //     return postService.getPostsByUsername(username);
+    // }
 
     @PutMapping("/{id}")
     public Post updatePost(@PathVariable String id, @RequestBody Post post) {
