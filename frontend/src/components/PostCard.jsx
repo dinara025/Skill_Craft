@@ -40,10 +40,12 @@ const PostCard = ({
         ? `/api/posts/${post.id}/unlike/${userId}`
         : `/api/posts/${post.id}/like/${userId}`;
   
-      console.log("Calling endpoint:", `http://localhost:8080/api/posts/${post.id}/like/${userId}`); // ✅ log this
-  
-      const response = await axios.put(`http://localhost:8080/api/posts/${post.id}/like/${userId}`);
+      console.log("Calling endpoint:", `http://localhost:8080/api/auth/posts/${post.id}/like/${userId}`);
+      const response = await axios.put(`http://localhost:8080/api/auth/posts/${post.id}/like/${userId}`);
       const updatedPost = response.data;
+  
+      // Log the response to debug
+      console.log("API Response:", updatedPost);
   
       setPosts(prevPosts =>
         prevPosts.map(p =>
@@ -52,8 +54,8 @@ const PostCard = ({
                 ...p,
                 content: {
                   ...p.content,
-                  isLiked: updatedPost.likedUsers.includes(userId),
-                  likes: updatedPost.likedUsers.length
+                  isLiked: updatedPost.likedUsers?.includes(userId) ?? false, // Fallback if likedUsers is undefined
+                  likes: updatedPost.likedUsers?.length ?? 0 // Fallback if likedUsers is undefined
                 }
               }
             : p

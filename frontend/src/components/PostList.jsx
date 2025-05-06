@@ -16,7 +16,7 @@ const PostList = ({ userId }) => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:8080/api/posts', {
+        const response = await fetch('http://localhost:8080/api/auth/posts', {
           headers: {
             ...getAuthHeaders().headers,  // ✅ Attach JWT headers
             'Accept': 'application/json'
@@ -99,7 +99,7 @@ const PostList = ({ userId }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
+      const response = await fetch(`http://localhost:8080/api/auth/posts/${postId}`, {
         method: 'DELETE',
         headers: {
           ...getAuthHeaders().headers,

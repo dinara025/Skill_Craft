@@ -6,7 +6,9 @@ import FollowSystem from './components/FollowSystem';
 import CreatePost from './components/CreatePost'; 
 import LearningPlans from './components/LearningPlans';
 import UpdatePost from './components/UpdatePost';
+import UserProfile from './components/UserProfile';
 import AdminLoginPage from './components/AdminLoginPage';
+
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -94,6 +96,7 @@ function App() {
             <Route path="/learning-plans" element={<LearningPlans user={loggedInUser} />} />
             <Route path="/update-post/:id" element={<UpdatePost user={loggedInUser} />} />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/profile" element={<UserProfile user={loggedInUser} />} />
           </Routes>
         )}
       </div>
