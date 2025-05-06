@@ -1,4 +1,3 @@
-// learningPlanService.js
 import axios from 'axios';
 import { getAuthHeaders } from './authService';
 
@@ -8,9 +7,11 @@ const API_BASE = 'http://localhost:8080/api/learning-plans';
 export const fetchPlansByUser = (userId) =>
   axios.get(`${API_BASE}/user/${userId}`, getAuthHeaders());
 
-// Fetch all plans (if needed)
+
+// Fetch all plans
 export const fetchAllPlans = () =>
   axios.get(API_BASE, getAuthHeaders());
+
 
 // Create a new plan
 export const createPlan = (planData) =>
@@ -22,6 +23,7 @@ export const createPlan = (planData) =>
     },
   });
 
+
 // Update a plan
 export const updatePlan = (planId, planData) =>
   axios.put(`${API_BASE}/${planId}`, planData, {
@@ -31,6 +33,7 @@ export const updatePlan = (planId, planData) =>
       'Content-Type': 'application/json',
     },
   });
+
 
 // Delete a plan
 export const deletePlan = (planId) =>
