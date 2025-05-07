@@ -1,0 +1,23 @@
+/* ============================================= */
+/*              Global Styles                   */
+/* ============================================= */
+:root {
+    --primary-color: #3498db;
+    --primary-hover: #2980b9;
+    --secondary-color: #95a5a6;
+    --secondary-hover: #7f8c8d;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --warning-hover: #e67e22;
+    --danger-color: #e74c3c;
+    --danger-hover: #c0392b;
+    --expert-color: #9b59b6;
+    --text-dark: #2c3e50;
+    --text-medium: #34495e;
+    --text-light: #7f8c8d;
+    --border-color: #ddd;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
