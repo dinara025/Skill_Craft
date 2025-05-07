@@ -108,7 +108,7 @@
     border-radius: 8px;
     box-shadow: var(--shadow);
     backdrop-filter: blur(5px);
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.7);
   }
   
   .course-form-container h2,
