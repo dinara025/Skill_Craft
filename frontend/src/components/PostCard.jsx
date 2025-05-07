@@ -19,6 +19,7 @@ import {
   format
 } from 'date-fns';
 import '../styles/PostCard.css';
+import CommentThread from './CommentThread'; // Import the CommentThread component
 
 const PostCard = ({
   post,
@@ -27,26 +28,25 @@ const PostCard = ({
   handleDeletePost,
   setPosts,
   userId,
-  isPostOwner
+  isPostOwner,
+  user
 }) => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState(post.content.commentsList || []);
   const navigate = useNavigate();
-  const dropdownRef = useRef(null); // Moved dropdownRef to PostCard
-
+  const dropdownRef = useRef(null);
 
   const handleLikeToggle = async () => {
     try {
       const endpoint = post.content.isLiked
         ? `/api/posts/${post.id}/unlike/${userId}`
         : `/api/posts/${post.id}/like/${userId}`;
-  
+
       console.log("Calling endpoint:", `http://localhost:8080/api/auth/posts/${post.id}/like/${userId}`);
       const response = await axios.put(`http://localhost:8080/api/auth/posts/${post.id}/like/${userId}`);
       const updatedPost = response.data;
-  
-      // Log the response to debug
-      console.log("API Response:", updatedPost);
-  
+
       setPosts(prevPosts =>
         prevPosts.map(p =>
           p.id === post.id
@@ -54,8 +54,8 @@ const PostCard = ({
                 ...p,
                 content: {
                   ...p.content,
-                  isLiked: updatedPost.likedUsers?.includes(userId) ?? false, // Fallback if likedUsers is undefined
-                  likes: updatedPost.likedUsers?.length ?? 0 // Fallback if likedUsers is undefined
+                  isLiked: updatedPost.likedUsers?.includes(userId) ?? false,
+                  likes: updatedPost.likedUsers?.length ?? 0
                 }
               }
             : p
@@ -65,8 +65,6 @@ const PostCard = ({
       console.error('Failed to toggle like:', error);
     }
   };
-  
-
 
   const handleBookmarkToggle = () => {
     setPosts(prevPosts =>
@@ -89,7 +87,6 @@ const PostCard = ({
       console.warn(`User ${userId} is not authorized to edit post ${post.id}`);
       return;
     }
-    
     toggleDropdown(null);
     navigate(`/update-post/${post.id}`, { state: { post } });
   };
@@ -123,17 +120,33 @@ const PostCard = ({
     setTouchStartX(null);
   };
 
+  const handleAddComment = (newComment) => {
+    setComments(prev => [...prev, newComment]);
+    setPosts(prevPosts =>
+      prevPosts.map(p =>
+        p.id === post.id
+          ? {
+              ...p,
+              content: {
+                ...p.content,
+                comments: (p.content.comments || 0) + 1,
+                commentsList: [...(p.content.commentsList || []), newComment]
+              }
+            }
+          : p
+      )
+    );
+  };
+
   let timeAgo = 'Just now';
   try {
     if (post?.content?.time) {
       const parsedTime = new Date(post.content.time);
       if (!isNaN(parsedTime)) {
         const daysDiff = differenceInDays(new Date(), parsedTime);
-        if (daysDiff < 7) {
-          timeAgo = formatDistanceToNow(parsedTime, { addSuffix: true });
-        } else {
-          timeAgo = format(parsedTime, 'dd MMM yyyy');
-        }
+        timeAgo = daysDiff < 7
+          ? formatDistanceToNow(parsedTime, { addSuffix: true })
+          : format(parsedTime, 'dd MMM yyyy');
       }
     }
   } catch (error) {
@@ -251,7 +264,11 @@ const PostCard = ({
             {post.content.isLiked ? <FaHeart /> : <FaRegHeart />}
             <span>{post.content.likes}</span>
           </Button>
-          <Button variant="link" className="comment-btn">
+          <Button
+            variant="link"
+            className="comment-btn"
+            onClick={() => setShowComments(!showComments)}
+          >
             <FaComment />
             <span>{post.content.comments}</span>
           </Button>
@@ -268,6 +285,17 @@ const PostCard = ({
           {post.content.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
         </Button>
       </Card.Footer>
+
+      {showComments && (
+        <CommentThread
+          postId={post.id}
+          comments={comments}
+          userId={userId}
+          user={user}
+          onAddComment={handleAddComment}
+          onClose={() => setShowComments(false)}
+        />
+      )}
     </Card>
   );
 };

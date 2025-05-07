@@ -1,0 +1,31 @@
+.comment-thread {
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    background-color: #f9f9f9;
+  }
+  
+  .comment-thread-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .comment-list {
+    margin-top: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  
+  .comment-item {
+    margin-bottom: 0.5rem;
+    padding: 0.3rem;
+    background-color: #fff;
+    border-radius: 5px;
+  }
+  
+  .comment-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
