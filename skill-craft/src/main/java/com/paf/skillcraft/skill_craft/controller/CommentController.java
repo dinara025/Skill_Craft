@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/comments")
+@CrossOrigin(origins = "*")
+@RequestMapping("/api/auth/comments")
 public class CommentController {
 
     @Autowired
