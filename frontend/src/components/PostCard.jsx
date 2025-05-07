@@ -19,7 +19,7 @@ import {
   format
 } from 'date-fns';
 import '../styles/PostCard.css';
-import CommentThread from './CommentThread'; // Import the CommentThread component
+import CommentThread from './CommentThread.jsx'; // Import the CommentThread component
 
 const PostCard = ({
   post,
