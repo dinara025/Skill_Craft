@@ -4,8 +4,7 @@ import { Container, Row, Col, Card, Button, Form, Spinner } from 'react-bootstra
 import {
   FaUserPlus,
   FaChalkboardTeacher,
-  FaBook,
-  FaBookOpen
+  FaBook
 } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsPlusCircleFill } from 'react-icons/bs';
@@ -29,7 +28,6 @@ const MainPage = ({ user }) => {
   const [description, setDescription] = useState('');
   const [mediaFiles, setMediaFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
-  const [charCount, setCharCount] = useState(0);
   const [uploading, setUploading] = useState(false);
   const MAX_CHARS = 500;
   const MAX_MEDIA = 3;
@@ -219,7 +217,6 @@ const MainPage = ({ user }) => {
       await createPost(postPayload);
       alert('Post created successfully!');
       setDescription('');
-      setCharCount(0);
       setMediaFiles([]);
       setPreviewUrls([]);
       window.location.reload(); // Refresh the page to update PostList
@@ -235,7 +232,6 @@ const MainPage = ({ user }) => {
     const text = e.target.value;
     if (text.length <= MAX_CHARS) {
       setDescription(text);
-      setCharCount(text.length);
     }
   };
 
@@ -316,9 +312,6 @@ const MainPage = ({ user }) => {
                       disabled={uploading}
                     />
                   </div>
-                  <div className={`char-counter ${charCount > MAX_CHARS * 0.9 ? 'warning' : ''}`}>
-                    {charCount}/{MAX_CHARS}
-                  </div>
                   {previewUrls.length > 0 && (
                     <div className="media-preview">
                       {previewUrls.map((url, index) => (
@@ -359,12 +352,6 @@ const MainPage = ({ user }) => {
                     >
                       📷 {mediaFiles.length > 0 ? 'Add More' : 'Add Media'}
                     </Button>
-                    {/* <Button variant="outline-primary" size="sm" className="ms-2">
-                      <FaBookOpen className="me-1" /> Add Resource
-                    </Button>
-                    <Button variant="outline-success" size="sm" className="ms-2">
-                      <FaChalkboardTeacher className="me-1" /> Ask Question
-                    </Button> */}
                     <Button
                       type="submit"
                       variant="primary"
@@ -383,30 +370,6 @@ const MainPage = ({ user }) => {
                     </Button>
                   </div>
                 </Form>
-                <div className="post-input-container">
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="post-avatar"
-                  />
-                  <Form.Control
-                    as="textarea"
-                    rows={2}
-                    placeholder="Share what you're learning..."
-                    className="post-input"
-                  />
-                </div>
-        <div className="post-actions">
-                  <Button variant="outline-primary" size="sm">
-                    <FaBookOpen className="me-1" /> Add Resource
-                  </Button>
-                  <Button variant="outline-success" size="sm" className="ms-2">
-                    <FaChalkboardTeacher className="me-1" /> Ask Question
-                  </Button>
-                  <Button variant="primary" size="sm" className="ms-auto">
-                    Post
-                  </Button>
-                </div>
               </Card>
 
               <div className="feed-tabs">
