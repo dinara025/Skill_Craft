@@ -46,8 +46,8 @@
     background-image: url('https://img.freepik.com/free-photo/learning-education-ideas-insight-intelligence-study-concept_53876-120116.jpg?t=st=1746541770~exp=1746545370~hmac=d3eec939542cb3e274380113089a59b379d4a758f82f0bf5035b0f8927fb92a1&w=1380');
     background-size: cover;
     background-position: center;
+    background-repeat: repeat;
     background-attachment: fixed;
-    background-repeat: no-repeat;
     padding: 2rem 0;
   }
   
