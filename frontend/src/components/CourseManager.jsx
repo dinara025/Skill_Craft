@@ -1,16 +1,26 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import '../styles/CourseManager.css';
-
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faFilePdf, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 function CourseManager() {
   const [id, setId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState('beginner');
   const [pdfUrl, setPdfUrl] = useState('');
   const [courses, setCourses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 5;
+
+  const difficultyLevels = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+    { value: 'expert', label: 'Expert' }
+  ];
 
   useEffect(() => {
     loadCourses();
