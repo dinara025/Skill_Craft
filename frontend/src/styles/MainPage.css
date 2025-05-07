@@ -634,3 +634,92 @@
 .post-dropdown-menu .dropdown-item:hover {
   background-color: #f8f9fa;
 }
+
+.create-post-card .post-editor {
+  padding: 1rem;
+}
+
+.create-post-card .post-input-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.create-post-card .post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.create-post-card .post-input {
+  border-radius: 8px;
+  resize: none;
+}
+
+.create-post-card .char-counter {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.create-post-card .char-counter.warning {
+  color: #dc3545;
+}
+
+.create-post-card .media-preview {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.create-post-card .preview-item {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100px;
+  height: 100px;
+}
+
+.create-post-card .preview-item img,
+.create-post-card .preview-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.create-post-card .remove-media {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.create-post-card .remove-media:hover {
+  background: #c82333;
+}
+
+.create-post-card .remove-media:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.create-post-card .post-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
