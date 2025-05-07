@@ -168,7 +168,7 @@ const MainPage = ({ user }) => {
                     className="post-input"
                   />
                 </div>
-                <div className="post-actions">
+        <div className="post-actions">
                   <Button variant="outline-primary" size="sm">
                     <FaBookOpen className="me-1" /> Add Resource
                   </Button>
@@ -192,7 +192,7 @@ const MainPage = ({ user }) => {
                 ))}
               </div>
 
-              <PostList userId={currentUser.id} />
+              <PostList userId={currentUser.id} user={currentUser} />
             </Col>
 
             {/* Right Sidebar */}

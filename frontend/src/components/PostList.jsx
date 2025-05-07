@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import PostCard from './PostCard';
-import { getAuthHeaders } from '../services/authService'; // ✅ Import JWT header function
+import { getAuthHeaders } from '../services/authService';
 import '../styles/PostList.css';
 
-const PostList = ({ userId }) => {
+const PostList = ({ userId, user }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(null);
 
-  const samplePosts = [/* unchanged samplePosts array */];
+  const samplePosts = []; // Assuming samplePosts is empty or defined elsewhere
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -18,7 +18,7 @@ const PostList = ({ userId }) => {
       try {
         const response = await fetch('http://localhost:8080/api/auth/posts', {
           headers: {
-            ...getAuthHeaders().headers,  // ✅ Attach JWT headers
+            ...getAuthHeaders().headers,
             'Accept': 'application/json'
           }
         });
@@ -157,6 +157,7 @@ const PostList = ({ userId }) => {
             setPosts={setPosts}
             userId={String(userId)}
             isPostOwner={post.userId === String(userId)}
+            user={user}
           />
         ))
       )}
