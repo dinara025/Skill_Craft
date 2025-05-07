@@ -19,7 +19,7 @@ import {
   format
 } from 'date-fns';
 import '../styles/PostCard.css';
-import CommentThread from './CommentThread.jsx'; // Import the CommentThread component
+import CommentThread from './CommentThread.jsx';
 
 const PostCard = ({
   post,
@@ -131,6 +131,24 @@ const PostCard = ({
                 ...p.content,
                 comments: (p.content.comments || 0) + 1,
                 commentsList: [...(p.content.commentsList || []), newComment]
+              }
+            }
+          : p
+      )
+    );
+  };
+
+  const handleCommentsFetched = (fetchedComments) => {
+    setComments(fetchedComments);
+    setPosts(prevPosts =>
+      prevPosts.map(p =>
+        p.id === post.id
+          ? {
+              ...p,
+              content: {
+                ...p.content,
+                comments: fetchedComments.length,
+                commentsList: fetchedComments
               }
             }
           : p
@@ -270,7 +288,7 @@ const PostCard = ({
             onClick={() => setShowComments(!showComments)}
           >
             <FaComment />
-            <span>{post.content.comments}</span>
+            <span>{comments.length}</span>
           </Button>
           <Button variant="link" className="share-btn">
             <FaShare />
@@ -289,10 +307,10 @@ const PostCard = ({
       {showComments && (
         <CommentThread
           postId={post.id}
-          comments={comments}
           userId={userId}
           user={user}
           onAddComment={handleAddComment}
+          onCommentsFetched={handleCommentsFetched}
           onClose={() => setShowComments(false)}
         />
       )}
