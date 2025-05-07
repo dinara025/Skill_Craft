@@ -383,6 +383,30 @@ const MainPage = ({ user }) => {
                     </Button>
                   </div>
                 </Form>
+                <div className="post-input-container">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="post-avatar"
+                  />
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    placeholder="Share what you're learning..."
+                    className="post-input"
+                  />
+                </div>
+        <div className="post-actions">
+                  <Button variant="outline-primary" size="sm">
+                    <FaBookOpen className="me-1" /> Add Resource
+                  </Button>
+                  <Button variant="outline-success" size="sm" className="ms-2">
+                    <FaChalkboardTeacher className="me-1" /> Ask Question
+                  </Button>
+                  <Button variant="primary" size="sm" className="ms-auto">
+                    Post
+                  </Button>
+                </div>
               </Card>
 
               <div className="feed-tabs">
