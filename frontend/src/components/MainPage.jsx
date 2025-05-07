@@ -61,13 +61,18 @@ const MainPage = ({ user }) => {
     {
       icon: <FaChalkboardTeacher className="action-icon" />,
       label: "Start Teaching",
-      variant: "outline-success"
+
+      variant: "outline-success",
+      onClick: () => navigate("/Learning")
+
+   
     },
     {
       icon: <FaBook className="action-icon" />,
       label: "Learning Plans",
       variant: "outline-info",
       onClick: () => navigate("/learning-plans")
+
     }
   ];
 

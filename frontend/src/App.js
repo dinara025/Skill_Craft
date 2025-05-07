@@ -4,7 +4,10 @@ import AuthPage from './components/AuthPage';
 import MainPage from './components/MainPage';
 import FollowSystem from './components/FollowSystem';
 import CreatePost from './components/CreatePost'; 
-import LearningPlans from './components/LearningPlans';
+
+import LearningPlans from './components/LearningPlans'; // Added LearningPlans also
+import Course from './components/CourseManager';
+
 import UpdatePost from './components/UpdatePost';
 import UserProfile from './components/UserProfile';
 import AdminLoginPage from './components/AdminLoginPage';
@@ -96,7 +99,13 @@ function App() {
             <Route path="/learning-plans" element={<LearningPlans user={loggedInUser} />} />
             <Route path="/update-post/:id" element={<UpdatePost user={loggedInUser} />} />
             <Route path="*" element={<Navigate to="/" />} />
+
+
+            {/* course management page */}
+            <Route path="/Learning" element={<Course />} />
+=======
             <Route path="/profile" element={<UserProfile user={loggedInUser} />} />
+
           </Routes>
         )}
       </div>
