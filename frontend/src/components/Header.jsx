@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import '../styles/Header.css';
 import { FaBars, FaBell, FaUserCircle } from 'react-icons/fa';
+import { Link } from 'react-router-dom'; // ✅ Import Link
+import '../styles/Header.css';
 
 function Header({ onMenuClick }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +15,7 @@ function Header({ onMenuClick }) {
     <header className="header">
       <div className="header-left">
         <button className="menu-button" onClick={onMenuClick}>
-          <FaBars />  {/* 👈 Just the menu icon */}
+          <FaBars />
         </button>
         <img src="/skill_craft_logo.png" alt="SkillCraft Logo" className="logo" />
       </div>
@@ -30,7 +31,9 @@ function Header({ onMenuClick }) {
 
       <div className="header-right">
         <FaBell className="icon" />
-        <FaUserCircle className="icon profile-icon" />
+        <Link to="/profile">
+          <FaUserCircle className="icon profile-icon" />
+        </Link>
       </div>
     </header>
   );

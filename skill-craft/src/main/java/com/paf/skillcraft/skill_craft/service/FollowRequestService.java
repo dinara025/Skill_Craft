@@ -35,15 +35,14 @@ public class FollowRequestService {
         if (!reverse.isEmpty()) {
             FollowRequest reverseRequest = reverse.get(0);
             String reverseStatus = reverseRequest.getStatus();
-
-            // ✅ If reverse request already accepted, allow sender to follow back
+        
+            // If already accepted, no need for a new request
             if ("accepted".equalsIgnoreCase(reverseStatus)) {
-                // Allow creating new request
-            } else if (!"unfollow".equalsIgnoreCase(reverseStatus) && !"declined".equalsIgnoreCase(reverseStatus)) {
-                // If reverse request is still pending or not unfollow/declined → block new request
-                return reverseRequest;
+                return reverseRequest; // BLOCK creating duplicate accepted requests
             }
+            // ✅ Allow creating a new request EVEN IF the reverse request is pending, unfollow, or declined
         }
+        
 
         // Otherwise, create a NEW follow request
         FollowRequest newRequest = new FollowRequest(senderId, receiverId);

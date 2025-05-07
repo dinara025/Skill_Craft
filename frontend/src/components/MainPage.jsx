@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import {
-  FaSearch,
   FaUserPlus,
   FaChalkboardTeacher,
   FaBook,
@@ -16,7 +15,6 @@ import NavBar from '../components/NavBar';
 import '../styles/MainPage.css';
 
 const MainPage = ({ user }) => {
-
   const navigate = useNavigate();
 
   // ------------------ 🔥 STATE FOR NAVBAR (Sidebar) ------------------
@@ -42,12 +40,9 @@ const MainPage = ({ user }) => {
     skills: []
   };
 
-  // Navigation tabs
   const tabs = [
     { id: 1, name: "For You", active: true },
-    { id: 2, name: "Following" },
-    { id: 3, name: "Popular" },
-    { id: 4, name: "Learning" }
+    { id: 2, name: "Following" }
   ];
 
   const quickActions = [
@@ -111,16 +106,12 @@ const MainPage = ({ user }) => {
 
   return (
     <div className="skillshare-social">
-      {/* 🔥 Pass the click event to open the NavBar */}
       <Header onMenuClick={() => setShowNavBar(true)} />
-
-      {/* 🔥 Show NavBar only if showNavBar is true */}
       {showNavBar && <NavBar onClose={() => setShowNavBar(false)} />}
 
       <main className="main-content">
         <Container fluid>
           <Row>
-
             {/* Left Sidebar */}
             <Col lg={3} className="left-sidebar d-none d-lg-block">
               <Card className="profile-card">
@@ -166,7 +157,7 @@ const MainPage = ({ user }) => {
               </Card>
             </Col>
 
-            {/* Main Content */}
+            {/* Main Feed */}
             <Col lg={6} className="main-feed">
               <Card className="create-post-card">
                 <div className="post-input-container">
@@ -211,16 +202,6 @@ const MainPage = ({ user }) => {
 
             {/* Right Sidebar */}
             <Col lg={3} className="right-sidebar d-none d-lg-block">
-              <InputGroup className="search-bar mb-4">
-                <InputGroup.Text>
-                  <FaSearch />
-                </InputGroup.Text>
-                <Form.Control
-                  type="search"
-                  placeholder="Search skills, people, posts..."
-                />
-              </InputGroup>
-
               <Card className="quick-actions-card mb-4">
                 <Card.Body>
                   <h5>Quick Actions</h5>

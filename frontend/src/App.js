@@ -9,6 +9,7 @@ import LearningPlans from './components/LearningPlans'; // Added LearningPlans a
 import Course from './components/CourseManager';
 
 import UpdatePost from './components/UpdatePost';
+import UserProfile from './components/UserProfile';
 import AdminLoginPage from './components/AdminLoginPage';
 
 
@@ -24,7 +25,7 @@ function App() {
   
     const fetchUserDetails = async (username, token) => {
       try {
-        const response = await fetch(`http://localhost:8080/userDetails/${username}`, {
+        const response = await fetch(`http://localhost:8080/api/auth/userDetails/${username}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: 'application/json',
@@ -99,8 +100,12 @@ function App() {
             <Route path="/update-post/:id" element={<UpdatePost user={loggedInUser} />} />
             <Route path="*" element={<Navigate to="/" />} />
 
+
             {/* course management page */}
             <Route path="/Learning" element={<Course />} />
+=======
+            <Route path="/profile" element={<UserProfile user={loggedInUser} />} />
+
           </Routes>
         )}
       </div>
