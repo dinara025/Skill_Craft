@@ -198,7 +198,7 @@ const PostCard = ({
               <FaEllipsisH />
             </Button>
             {showDropdown === post.id && (
-              <Dropdown show className="post-dropdown-menu">
+              <Dropdown show className="post Beethoven-dropdown-menu">
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={handleEditPost}>
                     <FaEdit className="me-2" /> Edit Post
@@ -309,6 +309,7 @@ const PostCard = ({
           postId={post.id}
           userId={userId}
           user={user}
+          isPostOwner={isPostOwner}
           onAddComment={handleAddComment}
           onCommentsFetched={handleCommentsFetched}
           onClose={() => setShowComments(false)}

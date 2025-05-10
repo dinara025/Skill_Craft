@@ -1,25 +1,39 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Button, Form, Spinner, Alert } from 'react-bootstrap';
+import { Button, Form, Spinner, Alert, Dropdown } from 'react-bootstrap';
 import axios from 'axios';
 import { getAuthHeaders } from '../services/authService';
 import { formatDistanceToNow, differenceInDays, format } from 'date-fns';
+import { FaEllipsisH, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 import '../styles/CommentThread.css';
 
-const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, onClose }) => {
+const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onCommentsFetched, onClose }) => {
   const commentInputRef = useRef(null);
   const [comments, setComments] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState('');
   const [fetchError, setFetchError] = useState('');
+  const [showCommentDropdown, setShowCommentDropdown] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
 
-  // Fetch comments when component mounts or postId changes
+  useEffect(() => {
+    console.log('CommentThread Props:', { userId, isPostOwner, postId });
+  }, [userId, isPostOwner, postId]);
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
         setFetchError('');
 
-        // Fetch all users to map userId to username
+        // Check if user is authenticated
+        if (!userId || !getAuthHeaders()?.headers?.Authorization) {
+          setFetchError('Please log in to view comments.');
+          onCommentsFetched([]);
+          return;
+        }
+
         let userMap = new Map();
+
         try {
           const userResponse = await axios.get(`http://localhost:8080/api/auth/all`, {
             headers: {
@@ -27,16 +41,14 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
               'Accept': 'application/json'
             }
           });
-          console.log('Fetched users:', userResponse.data);
           userResponse.data.forEach(user => {
             userMap.set(user.id, user.username || `User_${user.id}`);
           });
         } catch (userError) {
           console.error('Error fetching users:', userError);
-          // Proceed with empty userMap; will use fallback
         }
 
-        // Fetch comments
+        console.log('Fetching comments with headers:', getAuthHeaders().headers);
         const commentResponse = await axios.get(`http://localhost:8080/api/auth/comments/post/${postId}`, {
           headers: {
             ...getAuthHeaders().headers,
@@ -44,10 +56,6 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
           }
         });
 
-        // Log raw comment response for debugging
-        console.log('Fetched comments:', commentResponse.data);
-
-        // Transform comments using userMap
         const transformedComments = commentResponse.data.map(comment => {
           let timeAgo = 'Unknown time';
           try {
@@ -65,6 +73,7 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
           }
 
           return {
+            id: comment.id,
             user: {
               id: comment.userId,
               name: userMap.get(comment.userId) || `User_${comment.userId}`
@@ -75,18 +84,22 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
         });
 
         setComments(transformedComments);
-        onCommentsFetched(transformedComments); // Notify PostCard of fetched comments
+        onCommentsFetched(transformedComments);
       } catch (error) {
         console.error('Error fetching comments:', error);
-        setFetchError('Failed to load comments. Please try again.');
-        onCommentsFetched([]); // Notify PostCard of empty comments on error
+        if (error.response?.status === 403) {
+          setFetchError('You are not authorized to view comments. Please log in or check your permissions.');
+          console.log('403 Response Details:', error.response);
+        } else {
+          setFetchError('Failed to load comments. Please try again.');
+        }
+        onCommentsFetched([]);
       }
     };
 
     fetchComments();
-  }, [postId, onCommentsFetched]);
+  }, [postId, onCommentsFetched, userId]);
 
-  // Focus input on mount
   useEffect(() => {
     commentInputRef.current?.focus();
   }, []);
@@ -98,7 +111,6 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
     const content = commentInputRef.current.value.trim();
     if (!content || isPosting) return;
 
-    // Validate userId
     if (!userId) {
       setError('User ID is missing. Please log in to comment.');
       return;
@@ -107,7 +119,6 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
     setIsPosting(true);
 
     try {
-      console.log('Posting comment with payload:', { postId, userId, content });
       const response = await axios.post('http://localhost:8080/api/auth/comments', {
         postId,
         userId,
@@ -119,9 +130,9 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
         }
       });
 
-      // Create new comment object with timestamp
       const currentTime = new Date();
       const newComment = {
+        id: response.data.id,
         user: {
           id: userId,
           name: user?.name || 'Anonymous'
@@ -130,26 +141,75 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
         timeAgo: formatDistanceToNow(currentTime, { addSuffix: true })
       };
 
-      // Update local state
       setComments(prev => [...prev, newComment]);
-
-      // Notify parent to update comment list
       onAddComment(newComment);
-
       commentInputRef.current.value = '';
     } catch (error) {
       console.error('Error posting comment:', error);
-      setError('Failed to post comment. Please try again.');
+      if (error.response?.status === 403) {
+        setError('You are not authorized to post comments. Please log in or check your permissions.');
+      } else {
+        setError('Failed to post comment. Please try again.');
+      }
     } finally {
       setIsPosting(false);
     }
+  };
+
+  const handleEditComment = (commentId, currentText) => {
+    console.log(`Editing comment ${commentId} with current text: ${currentText}`);
+    setShowCommentDropdown(null);
+  };
+
+  const handleDeleteComment = async () => {
+    if (!commentToDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:8080/api/auth/comments/${commentToDelete}`, {
+        headers: {
+          ...getAuthHeaders().headers
+        },
+        params: {
+          requesterId: userId,
+          postOwnerId: isPostOwner ? userId : ''
+        }
+      });
+      setComments(prev => prev.filter(cmt => cmt.id !== commentToDelete));
+      onCommentsFetched(comments.filter(cmt => cmt.id !== commentToDelete));
+      setShowCommentDropdown(null);
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      if (error.response?.status === 403) {
+        setError('You are not authorized to delete this comment.');
+      } else {
+        setError('Failed to delete comment. Please try again.');
+      }
+    } finally {
+      setShowDeleteDialog(false);
+      setCommentToDelete(null);
+    }
+  };
+
+  const handleShowDeleteDialog = (commentId) => {
+    setCommentToDelete(commentId);
+    setShowDeleteDialog(true);
+    setShowCommentDropdown(null);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setShowDeleteDialog(false);
+    setCommentToDelete(null);
+  };
+
+  const toggleCommentDropdown = (commentId) => {
+    setShowCommentDropdown(prev => prev === commentId ? null : commentId);
   };
 
   return (
     <div className="comment-thread">
       <div className="comment-thread-header d-flex justify-content-between align-items-center">
         <h6 className="mb-0">Comments ({fetchError ? 0 : comments.length})</h6>
-        <Button variant="link" onClick={onClose} className="text-danger">✕</Button>
+        <Button variant="link" onClick={onClose} className="text-danger p-0">✕</Button>
       </div>
 
       <div className="comment-list mt-2">
@@ -158,19 +218,57 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
         ) : comments.length === 0 ? (
           <p className="text-muted">No comments yet.</p>
         ) : (
-          comments.map((cmt, index) => (
-            <div key={index} className="comment-item mb-2">
-              <div className="comment-header">
-                <strong>{cmt.user?.name || 'Anonymous'}</strong>
-                <span className="comment-timestamp">{cmt.timeAgo}</span>
+          comments.map((cmt, index) => {
+            const isCommentOwner = String(cmt.user.id) === String(userId);
+
+            return (
+              <div className="comment-item mb-2" key={cmt.id || index}>
+                <div className="comment-header d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{cmt.user?.name || 'Anonymous'}</strong>
+                    <span className="comment-timestamp ms-2">{cmt.timeAgo}</span>
+                  </div>
+                  {(isCommentOwner || isPostOwner) && (
+                    <div className="comment-options-container">
+                      <Button
+                        variant="link"
+                        className="comment-options p-0"
+                        onClick={() => toggleCommentDropdown(cmt.id)}
+                      >
+                        <FaEllipsisH />
+                      </Button>
+                      {showCommentDropdown === cmt.id && (
+                        <Dropdown show className="comment-dropdown-menu">
+                          <Dropdown.Menu>
+                            {isCommentOwner && (
+                              <Dropdown.Item 
+                                onClick={() => handleEditComment(cmt.id, cmt.text)}
+                                title="Edit comment"
+                              >
+                                <FaEdit className="me-1" /> Edit
+                              </Dropdown.Item>
+                            )}
+                            <Dropdown.Item
+                              onClick={() => handleShowDeleteDialog(cmt.id)}
+                              className="text-danger"
+                              title="Delete comment"
+                            >
+                              <FaTrash className="me-1" /> Delete
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="comment-text mt-1">{cmt.text}</div>
               </div>
-              <div className="comment-text">{cmt.text}</div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
-      {error && <Alert variant="danger" className="mt-2">{error}</Alert>}
+      {error && <Alert variant="danger" className="mt-2 mb-2">{error}</Alert>}
 
       <Form onSubmit={handleCommentSubmit} className="comment-form d-flex gap-2 mt-3">
         <Form.Control
@@ -183,6 +281,36 @@ const CommentThread = ({ postId, user, userId, onAddComment, onCommentsFetched, 
           {isPosting ? <Spinner animation="border" size="sm" /> : 'Post'}
         </Button>
       </Form>
+
+      {showDeleteDialog && (
+        <div className="delete-confirmation-dialog">
+          <div className="delete-confirmation-content">
+            <div className="delete-confirmation-header">
+              <FaExclamationTriangle className="text-warning me-2" size={24} />
+              <h5>Delete Comment</h5>
+            </div>
+            <div className="delete-confirmation-body">
+              <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
+              <div className="delete-confirmation-buttons">
+                <Button 
+                  variant="outline-secondary" 
+                  onClick={handleCloseDeleteDialog}
+                  className="px-4"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="danger" 
+                  onClick={handleDeleteComment}
+                  className="px-4"
+                >
+                  Confirm Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
