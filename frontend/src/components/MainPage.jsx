@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaComments } from 'react-icons/fa';
 import { Container, Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import {
   FaUserPlus,
@@ -480,10 +481,14 @@ const MainPage = ({ user }) => {
                 </Card.Body>
               </Card>
 
-              <Button variant="light" className="notifications-btn">
-                <IoMdNotificationsOutline size={20} />
-                <span className="notification-count">3</span>
-              </Button>
+              <Button
+  variant="light"
+  className="notifications-btn"
+  onClick={() => navigate('/threads')}
+>
+  <FaComments size={20} />
+  <span className="notification-count">Chat</span>
+</Button>
             </Col>
           </Row>
         </Container>
