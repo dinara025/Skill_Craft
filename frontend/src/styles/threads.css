@@ -1,0 +1,31 @@
+.thread-list {
+    padding: 20px;
+    border-right: 1px solid #ccc;
+    max-width: 40%;
+  }
+  
+  .thread-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    transition: 0.2s ease;
+  }
+  
+  .thread-card:hover {
+    background-color: #eef;
+  }
+  
+  .thread-view {
+    padding: 20px;
+    flex: 1;
+  }
+  
+  .message {
+    background-color: #f4f4f4;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+  }
+  
