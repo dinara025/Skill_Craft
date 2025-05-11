@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
 import {
@@ -33,12 +33,46 @@ const MainPage = ({ user }) => {
   const MAX_MEDIA = 3;
   const MAX_VIDEO_DURATION = 30;
 
+  // ------------------ TOKEN EXPIRATION CHECK ------------------
+  const isTokenExpired = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert seconds to milliseconds
+      // Add a 5-second buffer to account for clock skew
+      return Date.now() >= (expiry - 5000);
+    } catch (error) {
+      return true; // Assume expired if token is invalid
+    }
+  };
+
   // ------------------ LOGOUT ------------------
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtUsername');
-    window.location.reload();
+    window.location.href = '/login';
   };
+
+  // ------------------ AUTO-LOGOUT ON TOKEN EXPIRY ------------------
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token && !isTokenExpired(token)) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert to milliseconds
+      const timeLeft = expiry - Date.now();
+      if (timeLeft > 0) {
+        const timeout = setTimeout(() => {
+          // Consider using react-toastify for better UX
+          alert('Your session has expired. Please log in again.');
+          handleLogout();
+        }, timeLeft);
+        return () => clearTimeout(timeout); // Cleanup on unmount
+      } else {
+        // Immediate logout if token is already expired
+        alert('Your session has expired. Please log in again.');
+        handleLogout();
+      }
+    }
+  }, []);
 
   const currentUser = user ? {
     id: user.id,
@@ -197,6 +231,13 @@ const MainPage = ({ user }) => {
       return;
     }
 
+    const token = localStorage.getItem('jwtToken');
+    if (!token || isTokenExpired(token)) {
+      alert('Your session has expired. Please log in again.');
+      handleLogout();
+      return;
+    }
+
     if (description.trim().length === 0) {
       alert('Post content cannot be empty.');
       return;
@@ -222,7 +263,12 @@ const MainPage = ({ user }) => {
       window.location.reload(); // Refresh the page to update PostList
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Something went wrong. Try again.');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert('Your session has expired. Please log in again.');
+        handleLogout();
+      } else {
+        alert('Something went wrong. Try again.');
+      }
     } finally {
       setUploading(false);
     }
