@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button, Form, Spinner, Alert, Dropdown } from 'react-bootstrap';
 import axios from 'axios';
-import { getAuthHeaders } from '../services/authService';
 import { formatDistanceToNow, differenceInDays, format } from 'date-fns';
-import { FaEllipsisH, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEllipsisH, FaEdit, FaTrash, FaExclamationTriangle, FaSave, FaTimes } from 'react-icons/fa';
+import { createComment, fetchCommentsByPostId, updateComment, deleteComment } from '../services/commentService';
+import { getAuthHeaders } from '../services/authService';
+import { isTokenExpired, handleLogout } from '../utils/authUtils';
 import '../styles/CommentThread.css';
 
 const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onCommentsFetched, onClose }) => {
@@ -15,25 +17,49 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
   const [showCommentDropdown, setShowCommentDropdown] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedCommentText, setEditedCommentText] = useState('');
 
+  // ------------------ AUTO-LOGOUT ON TOKEN EXPIRY ------------------
   useEffect(() => {
-    console.log('CommentThread Props:', { userId, isPostOwner, postId });
-  }, [userId, isPostOwner, postId]);
+    const token = localStorage.getItem('jwtToken');
+    if (token && !isTokenExpired(token)) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert to milliseconds
+      const timeLeft = expiry - Date.now();
+      if (timeLeft > 0) {
+        const timeout = setTimeout(() => {
+          // Consider using react-toastify for better UX
+          alert('Your session has expired. Please log in again.');
+          handleLogout();
+        }, timeLeft);
+        return () => clearTimeout(timeout); // Cleanup on unmount
+      } else {
+        alert('Your session has expired. Please log in again.');
+        handleLogout();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchComments = async () => {
       try {
         setFetchError('');
+        const token = localStorage.getItem('jwtToken');
+        if (!token || isTokenExpired(token)) {
+          setFetchError('Your session has expired. Please log in again.');
+          handleLogout();
+          return;
+        }
 
-        // Check if user is authenticated
         if (!userId || !getAuthHeaders()?.headers?.Authorization) {
           setFetchError('Please log in to view comments.');
           onCommentsFetched([]);
           return;
         }
 
+        // Fetch users for username mapping
         let userMap = new Map();
-
         try {
           const userResponse = await axios.get(`http://localhost:8080/api/auth/all`, {
             headers: {
@@ -46,27 +72,25 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
           });
         } catch (userError) {
           console.error('Error fetching users:', userError);
+          if (userError.response?.status === 401 || userError.response?.status === 403) {
+            setFetchError('Your session has expired. Please log in again.');
+            handleLogout();
+            return;
+          }
         }
 
-        console.log('Fetching comments with headers:', getAuthHeaders().headers);
-        const commentResponse = await axios.get(`http://localhost:8080/api/auth/comments/post/${postId}`, {
-          headers: {
-            ...getAuthHeaders().headers,
-            'Accept': 'application/json'
-          }
-        });
+        // Fetch comments using commentService
+        const commentResponse = await fetchCommentsByPostId(postId);
 
         const transformedComments = commentResponse.data.map(comment => {
           let timeAgo = 'Unknown time';
           try {
-            if (comment.createdAt) {
-              const parsedTime = new Date(comment.createdAt);
-              if (!isNaN(parsedTime)) {
-                const daysDiff = differenceInDays(new Date(), parsedTime);
-                timeAgo = daysDiff < 7
-                  ? formatDistanceToNow(parsedTime, { addSuffix: true })
-                  : format(parsedTime, 'dd MMM yyyy');
-              }
+            const parsedTime = new Date(comment.createdAt);
+            if (!isNaN(parsedTime)) {
+              const daysDiff = differenceInDays(new Date(), parsedTime);
+              timeAgo = daysDiff < 7
+                ? formatDistanceToNow(parsedTime, { addSuffix: true })
+                : format(parsedTime, 'dd MMM yyyy');
             }
           } catch (error) {
             console.error('Invalid comment timestamp:', comment.createdAt);
@@ -87,12 +111,12 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
         onCommentsFetched(transformedComments);
       } catch (error) {
         console.error('Error fetching comments:', error);
-        if (error.response?.status === 403) {
-          setFetchError('You are not authorized to view comments. Please log in or check your permissions.');
-          console.log('403 Response Details:', error.response);
-        } else {
-          setFetchError('Failed to load comments. Please try again.');
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setFetchError('Your session has expired. Please log in again.');
+          handleLogout();
+          return;
         }
+        setFetchError('Failed to load comments. Please try again.');
         onCommentsFetched([]);
       }
     };
@@ -107,7 +131,6 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     const content = commentInputRef.current.value.trim();
     if (!content || isPosting) return;
 
@@ -116,18 +139,19 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
       return;
     }
 
-    setIsPosting(true);
+    const token = localStorage.getItem('jwtToken');
+    if (!token || isTokenExpired(token)) {
+      setError('Your session has expired. Please log in again.');
+      handleLogout();
+      return;
+    }
 
+    setIsPosting(true);
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/comments', {
+      const response = await createComment({
         postId,
         userId,
         content,
-      }, {
-        headers: {
-          ...getAuthHeaders().headers,
-          'Content-Type': 'application/json'
-        }
       });
 
       const currentTime = new Date();
@@ -146,44 +170,83 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
       commentInputRef.current.value = '';
     } catch (error) {
       console.error('Error posting comment:', error);
-      if (error.response?.status === 403) {
-        setError('You are not authorized to post comments. Please log in or check your permissions.');
-      } else {
-        setError('Failed to post comment. Please try again.');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setError('Your session has expired. Please log in again.');
+        handleLogout();
+        return;
       }
+      setError('Failed to post comment. Please try again.');
     } finally {
       setIsPosting(false);
     }
   };
 
   const handleEditComment = (commentId, currentText) => {
-    console.log(`Editing comment ${commentId} with current text: ${currentText}`);
+    setEditingCommentId(commentId);
+    setEditedCommentText(currentText);
     setShowCommentDropdown(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditedCommentText('');
+  };
+
+  const handleSaveEditedComment = async (commentId) => {
+    if (!editedCommentText.trim()) return;
+
+    const token = localStorage.getItem('jwtToken');
+    if (!token || isTokenExpired(token)) {
+      setError('Your session has expired. Please log in again.');
+      handleLogout();
+      return;
+    }
+
+    try {
+      const response = await updateComment(commentId, userId, editedCommentText);
+
+      setComments(prev =>
+        prev.map(comment =>
+          comment.id === commentId ? { ...comment, text: response.data.content } : comment
+        )
+      );
+
+      setEditingCommentId(null);
+      setEditedCommentText('');
+    } catch (error) {
+      console.error('Error saving edited comment:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setError('Your session has expired. Please log in again.');
+        handleLogout();
+        return;
+      }
+      setError('Failed to update comment. Please try again.');
+    }
   };
 
   const handleDeleteComment = async () => {
     if (!commentToDelete) return;
 
+    const token = localStorage.getItem('jwtToken');
+    if (!token || isTokenExpired(token)) {
+      setError('Your session has expired. Please log in again.');
+      handleLogout();
+      return;
+    }
+
     try {
-      await axios.delete(`http://localhost:8080/api/auth/comments/${commentToDelete}`, {
-        headers: {
-          ...getAuthHeaders().headers
-        },
-        params: {
-          requesterId: userId,
-          postOwnerId: isPostOwner ? userId : ''
-        }
-      });
-      setComments(prev => prev.filter(cmt => cmt.id !== commentToDelete));
-      onCommentsFetched(comments.filter(cmt => cmt.id !== commentToDelete));
-      setShowCommentDropdown(null);
+      await deleteComment(commentToDelete, userId, isPostOwner ? userId : '');
+      const updated = comments.filter(cmt => cmt.id !== commentToDelete);
+      setComments(updated);
+      onCommentsFetched(updated);
     } catch (error) {
       console.error('Error deleting comment:', error);
-      if (error.response?.status === 403) {
-        setError('You are not authorized to delete this comment.');
-      } else {
-        setError('Failed to delete comment. Please try again.');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setError('Your session has expired. Please log in again.');
+        handleLogout();
+        return;
       }
+      setError('Failed to delete comment. Please try again.');
     } finally {
       setShowDeleteDialog(false);
       setCommentToDelete(null);
@@ -220,6 +283,7 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
         ) : (
           comments.map((cmt, index) => {
             const isCommentOwner = String(cmt.user.id) === String(userId);
+            const isEditing = editingCommentId === cmt.id;
 
             return (
               <div className="comment-item mb-2" key={cmt.id || index}>
@@ -228,7 +292,7 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
                     <strong>{cmt.user?.name || 'Anonymous'}</strong>
                     <span className="comment-timestamp ms-2">{cmt.timeAgo}</span>
                   </div>
-                  {(isCommentOwner || isPostOwner) && (
+                  {(isCommentOwner || isPostOwner) && !isEditing && (
                     <div className="comment-options-container">
                       <Button
                         variant="link"
@@ -241,17 +305,13 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
                         <Dropdown show className="comment-dropdown-menu">
                           <Dropdown.Menu>
                             {isCommentOwner && (
-                              <Dropdown.Item 
-                                onClick={() => handleEditComment(cmt.id, cmt.text)}
-                                title="Edit comment"
-                              >
+                              <Dropdown.Item onClick={() => handleEditComment(cmt.id, cmt.text)}>
                                 <FaEdit className="me-1" /> Edit
                               </Dropdown.Item>
                             )}
                             <Dropdown.Item
                               onClick={() => handleShowDeleteDialog(cmt.id)}
                               className="text-danger"
-                              title="Delete comment"
                             >
                               <FaTrash className="me-1" /> Delete
                             </Dropdown.Item>
@@ -261,7 +321,29 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
                     </div>
                   )}
                 </div>
-                <div className="comment-text mt-1">{cmt.text}</div>
+
+                <div className="comment-text mt-1">
+                  {isEditing ? (
+                    <div className="d-flex flex-column">
+                      <Form.Control
+                        type="text"
+                        value={editedCommentText}
+                        onChange={(e) => setEditedCommentText(e.target.value)}
+                        className="mb-2"
+                      />
+                      <div className="d-flex gap-2">
+                        <Button variant="success" size="sm" onClick={() => handleSaveEditedComment(cmt.id)}>
+                          <FaSave className="me-1" /> Save
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={handleCancelEdit}>
+                          <FaTimes className="me-1" /> Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    cmt.text
+                  )}
+                </div>
               </div>
             );
           })
@@ -292,18 +374,10 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
             <div className="delete-confirmation-body">
               <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
               <div className="delete-confirmation-buttons">
-                <Button 
-                  variant="outline-secondary" 
-                  onClick={handleCloseDeleteDialog}
-                  className="px-4"
-                >
+                <Button variant="outline-secondary" onClick={handleCloseDeleteDialog} className="px-4">
                   Cancel
                 </Button>
-                <Button 
-                  variant="danger" 
-                  onClick={handleDeleteComment}
-                  className="px-4"
-                >
+                <Button variant="danger" onClick={handleDeleteComment} className="px-4">
                   Confirm Delete
                 </Button>
               </div>
