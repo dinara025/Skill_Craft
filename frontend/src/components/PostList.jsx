@@ -1,29 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import PostCard from './PostCard';
-import { getAuthHeaders } from '../services/authService'; // ✅ Import JWT header function
+import { getAuthHeaders } from '../services/authService';
 import '../styles/PostList.css';
 
-const PostList = ({ userId }) => {
+const PostList = ({ userId, user }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(null);
 
-  const samplePosts = [/* unchanged samplePosts array */];
+  const samplePosts = []; // Assuming samplePosts is empty or defined elsewhere
+
+  // ------------------ TOKEN EXPIRATION CHECK ------------------
+  const isTokenExpired = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert seconds to milliseconds
+      // Add a 5-second buffer to account for clock skew
+      return Date.now() >= (expiry - 5000);
+    } catch (error) {
+      return true; // Assume expired if token is invalid
+    }
+  };
+
+  // ------------------ LOGOUT ------------------
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('jwtUsername');
+    window.location.href = '/login';
+  };
+
+  // ------------------ AUTO-LOGOUT ON TOKEN EXPIRY ------------------
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token && !isTokenExpired(token)) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000; // Convert to milliseconds
+      const timeLeft = expiry - Date.now();
+      if (timeLeft > 0) {
+        const timeout = setTimeout(() => {
+          // Consider using react-toastify for better UX
+          alert('Your session has expired. Please log in again.');
+          handleLogout();
+        }, timeLeft);
+        return () => clearTimeout(timeout); // Cleanup on unmount
+      } else {
+        alert('Your session has expired. Please log in again.');
+        handleLogout();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem('jwtToken');
+        if (!token || isTokenExpired(token)) {
+          alert('Your session has expired. Please log in again.');
+          handleLogout();
+          return;
+        }
+
         const response = await fetch('http://localhost:8080/api/auth/posts', {
           headers: {
-            ...getAuthHeaders().headers,  // ✅ Attach JWT headers
+            ...getAuthHeaders().headers,
             'Accept': 'application/json'
           }
         });
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            alert('Your session has expired. Please log in again.');
+            handleLogout();
+            return;
+          }
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
@@ -99,6 +151,13 @@ const PostList = ({ userId }) => {
     }
 
     try {
+      const token = localStorage.getItem('jwtToken');
+      if (!token || isTokenExpired(token)) {
+        alert('Your session has expired. Please log in again.');
+        handleLogout();
+        return;
+      }
+
       const response = await fetch(`http://localhost:8080/api/auth/posts/${postId}`, {
         method: 'DELETE',
         headers: {
@@ -108,6 +167,11 @@ const PostList = ({ userId }) => {
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          alert('Your session has expired. Please log in again.');
+          handleLogout();
+          return;
+        }
         throw new Error('Failed to delete post');
       }
 
@@ -157,6 +221,7 @@ const PostList = ({ userId }) => {
             setPosts={setPosts}
             userId={String(userId)}
             isPostOwner={post.userId === String(userId)}
+            user={user}
           />
         ))
       )}
