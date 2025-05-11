@@ -11,7 +11,7 @@ import Course from './components/CourseManager';
 import UpdatePost from './components/UpdatePost';
 import UserProfile from './components/UserProfile';
 import AdminLoginPage from './components/AdminLoginPage';
-
+import ThreadsPage from './components/ThreadsPage';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -98,6 +98,7 @@ function App() {
             <Route path="/follow-system" element={<FollowSystem senderId={loggedInUser.username} />} />
             <Route path="/learning-plans" element={<LearningPlans user={loggedInUser} />} />
             <Route path="/update-post/:id" element={<UpdatePost user={loggedInUser} />} />
+            <Route path="/threads" element={<ThreadsPage />} />
             <Route path="*" element={<Navigate to="/" />} />
 
 

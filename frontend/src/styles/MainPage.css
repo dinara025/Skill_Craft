@@ -723,3 +723,9 @@
   margin-top: 0.5rem;
   flex-wrap: wrap;
 }
+
+.notification-count {
+  font-size: 12px;
+  margin-left: 5px;
+  color: #333;
+}
