@@ -57,20 +57,20 @@ const UpdatePost = ({ user }) => {
 
     try {
       // In a real app, you would send the updated post to your API
-      // const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     content: content,
-      //     mediaLinks: mediaLinks
-      //   }),
-      // });
+      const response = await fetch(`http://localhost:8080/api/auth//posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: content,
+          mediaLinks: mediaLinks
+        }),
+      });
 
-      // if (!response.ok) {
-      //   throw new Error('Failed to update post');
-      // }
+      if (!response.ok) {
+        throw new Error('Failed to update post');
+      }
 
       // For demo purposes, we'll just log and navigate back
       console.log('Post updated:', { content, mediaLinks });

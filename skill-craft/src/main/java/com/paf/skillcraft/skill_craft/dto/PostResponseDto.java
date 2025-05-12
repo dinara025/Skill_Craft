@@ -8,26 +8,29 @@ public class PostResponseDto {
     private String content;
     private List<String> mediaLinks;
     private List<String> tags;
+    private String template; // Added template field
     private LocalDateTime createdAt;
     private String userId;
     private String username;
     private String avatar;
-    private int likeCount;  // Add likeCount field
+    private int likeCount;
 
     // Constructors
     public PostResponseDto() {}
 
     public PostResponseDto(String id, String content, List<String> mediaLinks, List<String> tags,
-                           LocalDateTime createdAt, String userId, String username, String avatar, int likeCount) {
+                           String template, LocalDateTime createdAt, String userId, String username,
+                           String avatar, int likeCount) {
         this.id = id;
         this.content = content;
         this.mediaLinks = mediaLinks;
         this.tags = tags;
+        this.template = template;
         this.createdAt = createdAt;
         this.userId = userId;
         this.username = username;
         this.avatar = avatar;
-        this.likeCount = likeCount;  // Initialize likeCount
+        this.likeCount = likeCount;
     }
 
     // Getters and Setters
@@ -63,6 +66,14 @@ public class PostResponseDto {
         this.tags = tags;
     }
 
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -96,10 +107,10 @@ public class PostResponseDto {
     }
 
     public int getLikeCount() {
-        return likeCount;  // Getter for likeCount
+        return likeCount;
     }
 
     public void setLikeCount(int likeCount) {
-        this.likeCount = likeCount;  // Setter for likeCount
+        this.likeCount = likeCount;
     }
 }
