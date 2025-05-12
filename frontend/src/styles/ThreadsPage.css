@@ -1,0 +1,187 @@
+/* ThreadsPage.css */
+
+:root {
+    --primary: #3b82f6;
+    --primary-light: #93c5fd;
+    --primary-dark: #1d4ed8;
+    --success: #10b981;
+    --success-light: #a7f3d0;
+    --danger: #ef4444;
+    --danger-light: #fca5a5;
+    --warning: #f59e0b;
+    --warning-light: #fde68a;
+    --neutral: #6b7280;
+    --neutral-light: #e5e7eb;
+    --neutral-dark: #4b5563;
+    --light: #f9fafb;
+    --dark: #111827;
+    --border-radius: 0.75rem;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .threads-container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--light);
+  }
+  
+  .threads-sidebar {
+    width: 35%;
+    border-right: 1px solid var(--neutral-light);
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  
+  .thread-view-container {
+    flex: 1;
+    background-color: white;
+    overflow-y: auto;
+    transition: var(--transition);
+  }
+  
+  .threads-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--neutral-light);
+    background-color: white;
+  }
+  
+  .threads-header h2 {
+    margin: 0 0 1rem 0;
+    color: var(--dark);
+    font-weight: 600;
+  }
+  
+  .threads-search {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  
+  .threads-search input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--neutral-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+  
+  .threads-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--neutral);
+  }
+  
+  .new-thread-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .new-thread-btn:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .new-thread-form-container {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .empty-thread-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 2rem;
+    color: var(--neutral);
+  }
+  
+  .empty-thread-view h3 {
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+  
+  .back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--primary);
+    padding: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .back-button:hover {
+    color: var(--primary-dark);
+  }
+  
+  /* Mobile Responsiveness */
+  @media (max-width: 768px) {
+    .threads-sidebar {
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 10;
+    }
+  
+    .thread-view-container {
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+  
+    .visible {
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+    }
+  
+    .hidden {
+      transform: translateX(-100%);
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  
+  /* Animation for thread transition */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .thread-view-container {
+    animation: fadeIn 0.3s ease-out;
+  }

@@ -7,19 +7,44 @@ const ThreadView = ({ thread }) => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    if (thread) {
-      axios.get(`http://localhost:8080/api/messages/${thread.id}`)
-        .then(res => setMessages(res.data))
-        .catch(err => console.error('Error fetching messages:', err));
-    }
+    if (!thread?.id) return;
+
+    const token = localStorage.getItem('jwtToken');
+
+    axios.get(`http://localhost:8080/api/messages/${thread.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => {
+      console.log("✅ Messages fetched:", res.data);
+      setMessages(res.data);
+    })
+    .catch(err => console.error('Error fetching messages:', err));
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread]);
 
-  const handleNewMessage = (newMsg) => {
-    setMessages(prev => [...prev, newMsg]);
+  const handleNewMessage = () => {
+    if (!thread?.id) return;
+
+    const token = localStorage.getItem('jwtToken');
+
+    axios.get(`http://localhost:8080/api/messages/${thread.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => setMessages(res.data))
+    .catch(err => console.error('Error fetching messages:', err));
   };
 
-  if (!thread) {
-    return <div className="thread-view"><p>Select a thread to view messages.</p></div>;
+  if (!thread || !thread.id) {
+    return (
+      <div className="thread-view">
+        <p style={{ color: 'gray' }}>Loading thread...</p>
+      </div>
+    );
   }
 
   return (
@@ -34,14 +59,17 @@ const ThreadView = ({ thread }) => {
         <p>No replies yet.</p>
       ) : (
         messages.map(msg => (
-          <div key={msg.id} className="message">
+          <div key={msg._id || msg.id} className="message">
             <p>{msg.message}</p>
             <small>— {msg.senderId}</small>
           </div>
         ))
       )}
 
-      <NewMessageForm threadId={thread.id} onMessagePosted={handleNewMessage} />
+{thread?.id && (
+  <NewMessageForm threadId={thread.id} onMessagePosted={handleNewMessage} />
+)}
+
     </div>
   );
 };
