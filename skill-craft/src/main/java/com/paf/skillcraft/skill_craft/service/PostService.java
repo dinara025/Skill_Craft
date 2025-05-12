@@ -27,8 +27,12 @@ public class PostService {
     public Post createPost(Post post) {
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        post.setLikeCount(0);  // Initialize likeCount to 0
-        post.setLikes(new ArrayList<>()); // Initialize likes list
+        post.setLikeCount(0);
+        post.setLikes(new ArrayList<>());
+        // Set default template if not provided
+        if (post.getTemplate() == null) {
+            post.setTemplate("general");
+        }
         return postRepository.save(post);
     }
 
@@ -61,6 +65,9 @@ public class PostService {
             if (updatedPost.getTags() != null) {
                 post.setTags(updatedPost.getTags());
             }
+            if (updatedPost.getTemplate() != null) {
+                post.setTemplate(updatedPost.getTemplate());
+            }
             post.setUpdatedAt(LocalDateTime.now());
             return postRepository.save(post);
         }
@@ -76,33 +83,31 @@ public class PostService {
             PostResponseDto dto = new PostResponseDto();
             dto.setId(post.getId());
             dto.setUserId(post.getUserId());
-            dto.setUsername(user != null ? user.getUsername() : "U");
+            dto.setUsername(user != null ? user.getUsername() : "Unknown");
             // dto.setAvatar(user != null ? user.getAvatar() : "default.png");
             dto.setContent(post.getContent());
             dto.setMediaLinks(post.getMediaLinks());
             dto.setTags(post.getTags());
+            dto.setTemplate(post.getTemplate()); // Map template field
             dto.setCreatedAt(post.getCreatedAt());
-            dto.setLikeCount(post.getLikeCount()); // Add the likeCount to the DTO
+            dto.setLikeCount(post.getLikeCount());
             return dto;
         }).collect(Collectors.toList());
     }
 
     // Add like to post
-    // PostService.java
-
     public Post addLike(String postId, String userId) {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
             if (!post.getLikes().contains(userId)) {
-                post.addLike(userId); // Add the like and update likeCount
-                post.setLikeCount(post.getLikes().size()); // Update like count based on the list size
+                post.addLike(userId);
+                post.setLikeCount(post.getLikes().size());
                 return postRepository.save(post);
             }
         }
         return null;
     }
-
 
     // Remove like from post
     public Post removeLike(String postId, String userId) {
@@ -110,7 +115,7 @@ public class PostService {
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
             if (post.getLikes().contains(userId)) {
-                post.removeLike(userId); // Remove the like and update likeCount
+                post.removeLike(userId);
                 return postRepository.save(post);
             }
         }
