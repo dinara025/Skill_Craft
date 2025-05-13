@@ -2,6 +2,7 @@ package com.paf.skillcraft.skill_craft.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,14 +11,17 @@ import java.util.List;
 public class Post {
     @Id
     private String id;
+
     private String userId;
     private String content;
-    private List<String> mediaLinks;
-    private List<String> tags;
-    private String template; // New field for template ID
+    private List<String> mediaLinks = new ArrayList<>();
+    private List<String> tags = new ArrayList<>();
+    private String template;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<String> likes;
+
+    private List<String> likes = new ArrayList<>();
     private int likeCount;
 
     // Getters and Setters
@@ -50,7 +54,7 @@ public class Post {
     }
 
     public void setMediaLinks(List<String> mediaLinks) {
-        this.mediaLinks = mediaLinks;
+        this.mediaLinks = mediaLinks != null ? mediaLinks : new ArrayList<>();
     }
 
     public List<String> getTags() {
@@ -58,7 +62,7 @@ public class Post {
     }
 
     public void setTags(List<String> tags) {
-        this.tags = tags;
+        this.tags = tags != null ? tags : new ArrayList<>();
     }
 
     public String getTemplate() {
@@ -90,7 +94,7 @@ public class Post {
     }
 
     public void setLikes(List<String> likes) {
-        this.likes = likes;
+        this.likes = likes != null ? likes : new ArrayList<>();
     }
 
     public int getLikeCount() {
@@ -101,21 +105,16 @@ public class Post {
         this.likeCount = likeCount;
     }
 
-    // Method to add a like
     public void addLike(String userId) {
-        if (likes == null) {
-            likes = new ArrayList<>();
-        }
         if (!likes.contains(userId)) {
             likes.add(userId);
-            likeCount++;
+            likeCount = likes.size();
         }
     }
 
-    // Method to remove a like
     public void removeLike(String userId) {
-        if (likes != null && likes.remove(userId)) {
-            likeCount--;
+        if (likes.remove(userId)) {
+            likeCount = likes.size();
         }
     }
 }

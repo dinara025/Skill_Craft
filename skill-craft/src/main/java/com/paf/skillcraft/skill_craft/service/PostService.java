@@ -10,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
 @Service
 public class PostService {
@@ -29,10 +27,11 @@ public class PostService {
         post.setUpdatedAt(LocalDateTime.now());
         post.setLikeCount(0);
         post.setLikes(new ArrayList<>());
-        // Set default template if not provided
+
         if (post.getTemplate() == null) {
             post.setTemplate("general");
         }
+
         return postRepository.save(post);
     }
 
@@ -54,8 +53,10 @@ public class PostService {
 
     public Post updatePost(String id, Post updatedPost) {
         Optional<Post> existing = postRepository.findById(id);
+
         if (existing.isPresent()) {
             Post post = existing.get();
+
             if (updatedPost.getContent() != null) {
                 post.setContent(updatedPost.getContent());
             }
@@ -68,48 +69,47 @@ public class PostService {
             if (updatedPost.getTemplate() != null) {
                 post.setTemplate(updatedPost.getTemplate());
             }
+
             post.setUpdatedAt(LocalDateTime.now());
             return postRepository.save(post);
         }
+
         return null;
     }
 
     public List<PostResponseDto> getAllPostsWithUserDetails() {
         List<Post> posts = postRepository.findAll();
-    
-        return posts.stream().map((Post post) -> {
+
+        return posts.stream().map(post -> {
             User user = userRepository.findById(post.getUserId()).orElse(null);
-    
+
             PostResponseDto dto = new PostResponseDto();
             dto.setId(post.getId());
             dto.setUserId(post.getUserId());
             dto.setUsername(user != null ? user.getUsername() : "Unknown");
-            // dto.setAvatar(user != null ? user.getAvatar() : "default.png");
             dto.setContent(post.getContent());
             dto.setMediaLinks(post.getMediaLinks());
             dto.setTags(post.getTags());
-            dto.setTemplate(post.getTemplate()); // Map template field
+            dto.setTemplate(post.getTemplate());
             dto.setCreatedAt(post.getCreatedAt());
             dto.setLikeCount(post.getLikeCount());
+            // dto.setLikes(post.getLikes());
             return dto;
         }).collect(Collectors.toList());
     }
 
-    // Add like to post
     public Post addLike(String postId, String userId) {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
             if (!post.getLikes().contains(userId)) {
                 post.addLike(userId);
-                post.setLikeCount(post.getLikes().size());
                 return postRepository.save(post);
             }
         }
         return null;
     }
 
-    // Remove like from post
     public Post removeLike(String postId, String userId) {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {

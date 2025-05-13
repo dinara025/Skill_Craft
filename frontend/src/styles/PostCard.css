@@ -281,7 +281,7 @@
 }
 
 .like-btn.liked {
-    color: #e0245e;
+    color: #e0245e !important;
 }
 
 .bookmark-btn.bookmarked {
@@ -516,4 +516,23 @@
     .modal-video {
         height: 50vh;
     }
+}
+
+.like-btn.liked {
+  color: #ff0000 !important; /* Ensure red color for liked state */
+}
+
+.like-btn.liked .like-icon {
+  color: #ff0000 !important; /* Explicitly set icon color */
+  fill: #ff0000 !important; /* For SVG fill */
+}
+
+.like-btn .like-icon {
+  font-size: 1.2rem;
+  transition: color 0.2s ease, fill 0.2s ease;
+}
+
+.action-count {
+  font-size: 0.9rem;
+  color: inherit;
 }

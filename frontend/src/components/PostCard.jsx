@@ -58,6 +58,9 @@ const PostCard = ({
 
   // Function to check if media is a video
   const isVideo = (url) => {
+    if (!url || typeof url !== 'string') {
+      return false; // Return false if url is undefined, null, or not a string
+    }
   // Remove query parameters
   const cleanUrl = url.split('?')[0];
   // Check for video extensions

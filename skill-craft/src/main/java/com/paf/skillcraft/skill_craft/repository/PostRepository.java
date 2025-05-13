@@ -6,4 +6,7 @@ import java.util.List;
 
 public interface PostRepository extends MongoRepository<Post, String> {
     List<Post> findByUserId(String userId);
+    
+    // Optional: to find posts liked by a specific user
+    List<Post> findByLikesContaining(String userId);
 }
