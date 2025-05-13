@@ -11,8 +11,10 @@ import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
 import PostList from '../components/PostList';
 import NavBar from '../components/NavBar';
-import CreatePost from './CreatePost'; // Import the CreatePost component
+import CreatePost from './CreatePost';
 import '../styles/MainPage.css';
+
+// ... other imports remain the same
 
 const MainPage = ({ user }) => {
   const navigate = useNavigate();
@@ -70,11 +72,6 @@ const MainPage = ({ user }) => {
         avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
         skills: [],
       };
-
-  const tabs = [
-    { id: 1, name: 'For You', active: true },
-    { id: 2, name: 'Following' },
-  ];
 
   const quickActions = [
     {
@@ -186,20 +183,15 @@ const MainPage = ({ user }) => {
 
             {/* Main Feed */}
             <Col lg={6} className="main-feed">
-              <CreatePost user={user} currentUser={currentUser} /> {/* Use CreatePost component */}
+              <CreatePost user={user} currentUser={currentUser} />
 
-              <div className="feed-tabs">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    className={`tab-btn ${tab.active ? 'active' : ''}`}
-                  >
-                    {tab.name}
-                  </button>
-                ))}
-              </div>
+              {/* Removed feed-tabs section */}
 
-              <PostList userId={currentUser.id} user={currentUser} />
+              <PostList
+                userId={currentUser.id}
+                user={currentUser}
+                // Removed `filter` prop if not needed anymore
+              />
             </Col>
 
             {/* Right Sidebar */}
