@@ -13,6 +13,8 @@ import PostList from '../components/PostList';
 import NavBar from '../components/NavBar';
 import CreatePost from './CreatePost';
 import '../styles/MainPage.css';
+import { FaLightbulb } from 'react-icons/fa';
+
 
 // ... other imports remain the same
 
@@ -249,13 +251,17 @@ const MainPage = ({ user }) => {
               </Card>
 
               <Button
-                variant="light"
-                className="notifications-btn"
-                onClick={() => navigate('/threads')}
-              >
-                <FaComments size={20} />
-                <span className="notification-count">Chat</span>
-              </Button>
+              variant="light"
+              className="community-help-btn"
+              onClick={() => navigate('/threads')}
+              aria-label="Get help from community"
+            >
+              <div className="btn-content">
+                <FaComments className="chat-icon" />
+                <span className="btn-text">Community Help</span>
+                <div className="pulse-dot"></div>
+              </div>
+            </Button>
             </Col>
           </Row>
         </Container>
