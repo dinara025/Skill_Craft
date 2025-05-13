@@ -57,9 +57,23 @@ public class UserController {
 
     @GetMapping("/userDetails/{username}")
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
-    Optional<User> user = userService.getUserByUsername(username);
-    return user.map(ResponseEntity::ok)
-               .orElseGet(() -> ResponseEntity.notFound().build());
-}
+        Optional<User> user = userService.getUserByUsername(username);
+        return user.map(ResponseEntity::ok)
+                   .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
+    // ----------- UPDATE PROFILE -----------
+    @PostMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestParam String username,
+            @RequestParam(required = false) String bio,
+            @RequestParam(required = false) String profilePhoto,
+            @RequestParam(required = false) String education,
+            @RequestParam(required = false) List<String> skills) {
+        User updatedUser = userService.updateProfile(username, bio, profilePhoto, education, skills);
+        if (updatedUser == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+        return ResponseEntity.ok(updatedUser);
+    }
 }
