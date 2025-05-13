@@ -2,6 +2,7 @@ package com.paf.skillcraft.skill_craft.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -25,6 +26,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable in production)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()  // Login & Register → open
+                .requestMatchers(HttpMethod.GET, "/api/messages/**").permitAll() // ✅ Allow viewing messages
+                .requestMatchers(HttpMethod.POST, "/api/messages").authenticated()
+                .requestMatchers("/api/messages/**").authenticated()
                 .requestMatchers("/api/**").authenticated()   // All other APIs → need JWT
                 
             )

@@ -4,11 +4,18 @@ import axios from 'axios';
 const NewMessageForm = ({ threadId, onMessagePosted }) => {
   const [message, setMessage] = useState('');
   const token = localStorage.getItem('jwtToken');
-  const senderId = localStorage.getItem('jwtUsername'); // or use user ID if stored
+  const senderId = localStorage.getItem('jwtUsername');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
+
+    // ✅ Debug log to check outgoing message
+    console.log("📤 Posting message with:", {
+      threadId,
+      senderId,
+      message
+    });
 
     try {
       const res = await axios.post('http://localhost:8080/api/messages', {
@@ -24,7 +31,7 @@ const NewMessageForm = ({ threadId, onMessagePosted }) => {
       onMessagePosted(res.data);
       setMessage('');
     } catch (err) {
-      console.error('Error posting message:', err);
+      console.error('❌ Error posting message:', err);
     }
   };
 
