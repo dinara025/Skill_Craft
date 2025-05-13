@@ -1,8 +1,8 @@
 package com.paf.skillcraft.skill_craft.controller;
 
+import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
 import com.paf.skillcraft.skill_craft.model.Post;
 import com.paf.skillcraft.skill_craft.service.PostService;
-import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,6 @@ public class PostController {
     // Create a new post
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
-        // Validate template field if necessary
         if (post.getTemplate() != null && !isValidTemplate(post.getTemplate())) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -38,9 +37,10 @@ public class PostController {
 
     // Get a post by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Post>> getPostById(@PathVariable String id) {
-        Optional<Post> post = postService.getPostById(id);
-        return ResponseEntity.ok(post);
+    public ResponseEntity<Post> getPostById(@PathVariable String id) {
+        return postService.getPostById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Get posts by user ID
@@ -53,12 +53,15 @@ public class PostController {
     // Update a post
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable String id, @RequestBody Post post) {
-        // Validate template field if necessary
         if (post.getTemplate() != null && !isValidTemplate(post.getTemplate())) {
             return ResponseEntity.badRequest().body(null);
         }
         Post updatedPost = postService.updatePost(id, post);
-        return ResponseEntity.ok(updatedPost);
+        if (updatedPost != null) {
+            return ResponseEntity.ok(updatedPost);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // Delete a post
@@ -68,26 +71,40 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoint to add a like to a post
+    // Like a post
     @PutMapping("/{id}/like/{userId}")
-    public ResponseEntity<Post> addLikeToPost(@PathVariable String id, @PathVariable String userId) {
+    public ResponseEntity<Post> likePost(@PathVariable String id, @PathVariable String userId) {
         Post updatedPost = postService.addLike(id, userId);
-        return ResponseEntity.ok(updatedPost);
+        if (updatedPost != null) {
+            return ResponseEntity.ok(updatedPost);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // Endpoint to remove a like from a post
+    // Unlike a post
     @PutMapping("/{id}/unlike/{userId}")
-    public ResponseEntity<Post> removeLikeFromPost(@PathVariable String id, @PathVariable String userId) {
+    public ResponseEntity<Post> unlikePost(@PathVariable String id, @PathVariable String userId) {
         Post updatedPost = postService.removeLike(id, userId);
-        return ResponseEntity.ok(updatedPost);
+        if (updatedPost != null) {
+            return ResponseEntity.ok(updatedPost);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Get list of users who liked a post
+    @GetMapping("/{id}/likes")
+    public ResponseEntity<List<String>> getLikedUsers(@PathVariable String id) {
+        Optional<Post> postOptional = postService.getPostById(id);
+        return postOptional.map(post -> ResponseEntity.ok(post.getLikes()))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Helper method to validate template values
     private boolean isValidTemplate(String template) {
-        return template != null && (
-            template.equals("learning-progress") ||
-            template.equals("ask-question") ||
-            template.equals("general")
-        );
+        return template.equals("learning-progress") ||
+               template.equals("ask-question") ||
+               template.equals("general");
     }
 }

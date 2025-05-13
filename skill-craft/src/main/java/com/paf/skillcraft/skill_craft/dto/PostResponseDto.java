@@ -5,23 +5,28 @@ import java.util.List;
 
 public class PostResponseDto {
     private String id;
+    private String title;
     private String content;
     private List<String> mediaLinks;
     private List<String> tags;
-    private String template; // Added template field
+    private String template;
     private LocalDateTime createdAt;
+
     private String userId;
     private String username;
     private String avatar;
+
     private int likeCount;
+    private List<String> likedUserIds;
 
     // Constructors
     public PostResponseDto() {}
 
-    public PostResponseDto(String id, String content, List<String> mediaLinks, List<String> tags,
+    public PostResponseDto(String id, String title, String content, List<String> mediaLinks, List<String> tags,
                            String template, LocalDateTime createdAt, String userId, String username,
-                           String avatar, int likeCount) {
+                           String avatar, int likeCount, List<String> likedUserIds) {
         this.id = id;
+        this.title = title;
         this.content = content;
         this.mediaLinks = mediaLinks;
         this.tags = tags;
@@ -31,15 +36,25 @@ public class PostResponseDto {
         this.username = username;
         this.avatar = avatar;
         this.likeCount = likeCount;
+        this.likedUserIds = likedUserIds;
     }
 
     // Getters and Setters
+
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getContent() {
@@ -112,5 +127,13 @@ public class PostResponseDto {
 
     public void setLikeCount(int likeCount) {
         this.likeCount = likeCount;
+    }
+
+    public List<String> getLikedUserIds() {
+        return likedUserIds;
+    }
+
+    public void setLikedUserIds(List<String> likedUserIds) {
+        this.likedUserIds = likedUserIds;
     }
 }
