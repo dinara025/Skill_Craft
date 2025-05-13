@@ -58,8 +58,11 @@ const PostCard = ({
 
   // Function to check if media is a video
   const isVideo = (url) => {
-    return url.match(/\.(mp4|webm|ogg)$/i);
-  };
+  // Remove query parameters
+  const cleanUrl = url.split('?')[0];
+  // Check for video extensions
+  return cleanUrl.match(/\.(mp4|webm|ogg)$/i);
+ };
 
   // Separate videos and images
   const videos = post.content.mediaLinks ? post.content.mediaLinks.filter(isVideo) : [];
