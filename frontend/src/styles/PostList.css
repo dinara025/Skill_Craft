@@ -2,98 +2,99 @@
     max-width: 700px;
     margin: 20px auto;
     padding: 0 20px;
-  }
-  
-  .post-list-container h2 {
+}
+
+.post-list-container h2 {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 20px;
-  }
-  
-  .loading,
-  .error {
+}
+
+.loading,
+.error {
     text-align: center;
     font-size: 16px;
     margin: 20px 0;
-  }
-  
-  .loading {
+}
+
+.loading {
     color: #555;
-  }
-  
-  .error {
+}
+
+.error {
     color: #d32f2f;
-  }
-  
-  .no-posts {
+}
+
+.no-posts {
     color: #777;
     font-size: 16px;
-  }
-  
-  .posts {
+}
+
+.posts {
     display: flex;
     flex-direction: column;
     gap: 20px;
-  }
-  
-  .post {
+}
+
+.post {
     background: #fff;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid #ddd;
-  }
-  
-  .post-content {
+}
+
+.post-content {
     color: #333;
     margin-bottom: 10px;
     font-size: 16px;
-  }
-  
-  .media {
+}
+
+/* .media {
     margin-bottom: 10px;
-  }
-  
-  .media-image {
+} */
+
+/* .media-image {
     width: 100%;
-    height: auto;
+    height: auto; 
     border-radius: 6px;
     margin-bottom: 10px;
-  }
-  
-  .tags {
+    object-fit: contain;
+} */
+
+.tags {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 10px;
-  }
-  
-  .tag {
+}
+
+.tag {
     background: #e3f2fd;
     color: #1976d2;
     font-size: 14px;
     padding: 4px 8px;
     border-radius: 4px;
-  }
-  
-  .post-meta {
+}
+
+.post-meta {
     color: #777;
     font-size: 14px;
-  }
+}
 
-  .post-list-container {
+.post-list-container {
     margin-top: 1rem;
-  }
-  
-  .error-card {
+}
+
+.error-card {
     border-color: #dc3545;
-  }
-  
-  .text-center {
+}
+
+.text-center {
     text-align: center;
-  }
-  
-  .spinner-border {
+}
+
+.spinner-border {
     width: 2rem;
     height: 2rem;
-  }
+}

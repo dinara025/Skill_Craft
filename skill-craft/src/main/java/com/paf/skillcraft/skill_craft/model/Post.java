@@ -14,10 +14,11 @@ public class Post {
     private String content;
     private List<String> mediaLinks;
     private List<String> tags;
+    private String template; // New field for template ID
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<String> likes; // List of user IDs who liked the post
-    private int likeCount; // Like count
+    private List<String> likes;
+    private int likeCount;
 
     // Getters and Setters
     public String getId() {
@@ -60,6 +61,14 @@ public class Post {
         this.tags = tags;
     }
 
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -99,14 +108,14 @@ public class Post {
         }
         if (!likes.contains(userId)) {
             likes.add(userId);
-            likeCount++; // Increment the like count
+            likeCount++;
         }
     }
 
     // Method to remove a like
     public void removeLike(String userId) {
         if (likes != null && likes.remove(userId)) {
-            likeCount--; // Decrement the like count
+            likeCount--;
         }
     }
 }
