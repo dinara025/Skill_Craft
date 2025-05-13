@@ -168,12 +168,12 @@ const RegisterForm = ({ onLogin, switchToLogin }) => {
           </button>
 
           <div className="auth-footer">
-            <p>
+            {/* <p>
               Already have an account?{' '}
               <button type="button" onClick={switchToLogin} className="auth-link">
                 Sign in
               </button>
-            </p>
+            </p> */}
             <div className="terms-agreement">
               <small>
                 By registering, you agree to our Terms of Service and Privacy Policy
