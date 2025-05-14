@@ -3,12 +3,11 @@ import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import axios from 'axios';
 import '../styles/PostCard.css';
 
-const LikeButton = ({ postId, userId, isLiked: initialIsLiked, likes: initialLikes, setPosts }) => {
+const LikeButton = ({ postId, userId, isLiked: initialIsLiked, likeCount: initialLikes, setPosts }) => {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likes, setLikes] = useState(initialLikes);
 
   const handleLikeToggle = async () => {
-    // Optimistic update
     const newIsLiked = !isLiked;
     const newLikes = newIsLiked ? likes + 1 : likes - 1;
 
@@ -18,33 +17,31 @@ const LikeButton = ({ postId, userId, isLiked: initialIsLiked, likes: initialLik
     console.log('Like toggle initiated:', { postId, userId, newIsLiked, newLikes });
 
     try {
-      const response = await axios.put(`http://localhost:8080/api/auth/posts/${postId}/like/${userId}`);
+      const endpoint = newIsLiked
+        ? `/api/auth/posts/${postId}/like/${userId}`
+        : `/api/auth/posts/${postId}/unlike/${userId}`;
+      const response = await axios.post(`http://localhost:8080${endpoint}`);
       const updatedPost = response.data;
 
       console.log('API response:', updatedPost);
 
-      // Update parent state with server data
       setPosts(prevPosts =>
         prevPosts.map(p =>
           p.id === postId
             ? {
                 ...p,
-                content: {
-                  ...p.content,
-                  isLiked: updatedPost.likedUsers?.includes(userId) ?? false,
-                  likes: updatedPost.likedUsers?.length ?? 0
-                }
+                isLiked: updatedPost.likes.includes(userId),
+                likeCount: updatedPost.likeCount,
+                likes: updatedPost.likes
               }
             : p
         )
       );
 
-      // Sync local state with server response
-      setIsLiked(updatedPost.likedUsers?.includes(userId) ?? false);
-      setLikes(updatedPost.likedUsers?.length ?? 0);
+      setIsLiked(updatedPost.likes.includes(userId));
+      setLikes(updatedPost.likeCount);
     } catch (error) {
       console.error('Failed to toggle like:', error);
-      // Revert optimistic update on error
       setIsLiked(initialIsLiked);
       setLikes(initialLikes);
     }
