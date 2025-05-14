@@ -14,4 +14,9 @@ public interface FollowRequestRepository extends MongoRepository<FollowRequest, 
 
     // ✅ NEW: Find all requests where this user is sender or receiver (for deletion or cleanup)
     List<FollowRequest> findBySenderIdOrReceiverId(String senderId, String receiverId);
+
+    long countByReceiverIdAndStatus(String receiverId, String status);
+
+    long countBySenderIdAndStatus(String senderId, String status);
+
 }

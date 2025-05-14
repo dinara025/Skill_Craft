@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  getFollowersCount,
+  getFollowingCount,
+} from "../services/followService";
 import "../styles/UserProfile.css";
 
 const UserProfile = ({ user }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("posts");
+
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,25 +31,41 @@ const UserProfile = ({ user }) => {
       }
     };
 
-    fetchPosts();
+    const fetchCounts = async () => {
+      try {
+        if (user?.username) {
+          const followersRes = await getFollowersCount(user.username);
+          setFollowersCount(followersRes.data);
+
+          const followingRes = await getFollowingCount(user.username);
+          setFollowingCount(followingRes.data);
+        }
+      } catch (err) {
+        console.error("Error fetching follow counts:", err);
+      }
+    };
+
+    if (user) {
+      fetchPosts();
+      fetchCounts();
+    }
   }, [user]);
 
-  // Handler for edit button click
   const handleEditProfile = () => {
     navigate("/profile/edit");
   };
 
-  if (loading) return (
-    <div className="loading-spinner">
-      <div className="spinner"></div>
-    </div>
-  );
-  
+  if (loading)
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+      </div>
+    );
+
   if (!user) return <div className="error-message">User not found</div>;
 
   return (
     <div className="profile-container">
-      {/* Profile Header */}
       <div className="profile-header">
         <div className="profile-cover">
           <div className="profile-avatar-container">
@@ -50,10 +74,7 @@ const UserProfile = ({ user }) => {
               alt="Profile"
               className="profile-avatar"
             />
-            <button 
-              className="edit-profile-button"
-              onClick={handleEditProfile}
-            >
+            <button className="edit-profile-button" onClick={handleEditProfile}>
               <i className="fas fa-camera"></i> Edit
             </button>
           </div>
@@ -62,39 +83,41 @@ const UserProfile = ({ user }) => {
         <div className="profile-info">
           <h1 className="profile-name">{user.username}</h1>
           <p className="profile-bio">{user.bio || "No bio yet"}</p>
-          
+
           <div className="profile-stats">
             <div className="stat-item">
-              <span className="stat-number">{user.postsCount || 0}</span>
+              <span className="stat-number">
+                {user.postsCount || posts.length}
+              </span>
               <span className="stat-label">Posts</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">{user.followersCount || 0}</span>
+              <span className="stat-number">{followersCount}</span>
               <span className="stat-label">Followers</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">{user.followingCount || 0}</span>
+              <span className="stat-number">{followingCount}</span>
               <span className="stat-label">Following</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Tabs */}
       <div className="profile-tabs">
-        <button 
+        <button
           className={`tab-button ${activeTab === "posts" ? "active" : ""}`}
           onClick={() => setActiveTab("posts")}
         >
           <i className="fas fa-th-large"></i> Posts
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === "courses" ? "active" : ""}`}
           onClick={() => setActiveTab("courses")}
         >
           <i className="fas fa-book"></i> Courses
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === "plans" ? "active" : ""}`}
           onClick={() => setActiveTab("plans")}
         >
@@ -110,13 +133,21 @@ const UserProfile = ({ user }) => {
               posts.map((post) => (
                 <div key={post.id} className="post-card">
                   {post.image && (
-                    <img src={post.image} alt={post.title} className="post-image" />
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="post-image"
+                    />
                   )}
                   <div className="post-content">
                     <h3 className="post-title">{post.title}</h3>
-                    <p className="post-excerpt">{post.content.substring(0, 100)}...</p>
+                    <p className="post-excerpt">
+                      {post.content.substring(0, 100)}...
+                    </p>
                     <div className="post-meta">
-                      <span className="post-date">{new Date(post.createdAt).toLocaleDateString()}</span>
+                      <span className="post-date">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
                       <span className="post-likes">
                         <i className="fas fa-heart"></i> {post.likes || 0}
                       </span>
@@ -145,8 +176,8 @@ const UserProfile = ({ user }) => {
                     <h4>{course.title || `Course ${idx + 1}`}</h4>
                     <p>{course.description || "No description available"}</p>
                     <div className="course-progress">
-                      <div 
-                        className="progress-bar" 
+                      <div
+                        className="progress-bar"
                         style={{ width: `${course.progress || 0}%` }}
                       ></div>
                       <span>{course.progress || 0}% complete</span>
@@ -176,10 +207,13 @@ const UserProfile = ({ user }) => {
                     <p>{plan.description || "No description available"}</p>
                     <div className="plan-meta">
                       <span>
-                        <i className="fas fa-calendar-alt"></i> {plan.duration || "No timeframe"}
+                        <i className="fas fa-calendar-alt"></i>{" "}
+                        {plan.duration || "No timeframe"}
                       </span>
                       <span>
-                        <i className="fas fa-check-circle"></i> {plan.completedItems || 0}/{plan.totalItems || 0} completed
+                        <i className="fas fa-check-circle"></i>{" "}
+                        {plan.completedItems || 0}/{plan.totalItems || 0}{" "}
+                        completed
                       </span>
                     </div>
                   </div>
