@@ -12,11 +12,12 @@ public class SkillCraftApplication {
     public static void main(String[] args) {
         // ✅ Load environment variables from .env
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
-        // ✅ Set them as system properties so Spring can access
+    
+        // ✅ Set them as system properties so Spring can resolve ${...}
         System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID", ""));
         System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET", ""));
-
+    
         SpringApplication.run(SkillCraftApplication.class, args);
     }
+    
 }

@@ -26,12 +26,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable in production)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()  // Login & Register → open
+                .requestMatchers("/api/auth/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/messages/**").permitAll() // ✅ Allow viewing messages
                 .requestMatchers(HttpMethod.POST, "/api/messages").authenticated()
                 .requestMatchers("/api/messages/**").authenticated()
                 .requestMatchers("/api/**").authenticated()   // All other APIs → need JWT
                 
             )
+            .oauth2Login(oauth2 -> oauth2
+            .defaultSuccessUrl("/api/auth/oauth2/success", true) 
+        )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
