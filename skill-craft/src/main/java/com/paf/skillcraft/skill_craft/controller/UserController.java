@@ -4,6 +4,7 @@ import com.paf.skillcraft.skill_craft.model.User;
 import com.paf.skillcraft.skill_craft.security.CustomUserDetails;
 import com.paf.skillcraft.skill_craft.security.JwtUtil;
 import com.paf.skillcraft.skill_craft.service.UserService;
+import com.paf.skillcraft.skill_craft.dto.AuthResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,13 +26,21 @@ public class UserController {
 
     // ----------- REGISTER -----------
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String password) {
-        User newUser = userService.register(username, password);
-        if (newUser == null) {
-            return ResponseEntity.badRequest().body("Username already exists");
-        }
-        return ResponseEntity.ok(newUser);
+public ResponseEntity<?> register(@RequestParam String username, @RequestParam String password) {
+    User newUser = userService.register(username, password);
+
+    if (newUser == null) {
+        return ResponseEntity.badRequest().body("Username already exists");
     }
+
+    // ✅ Generate token for the new user
+    CustomUserDetails userDetails = new CustomUserDetails(newUser);
+    String jwtToken = jwtUtil.generateToken(userDetails);
+
+    // ✅ Return token in JSON
+    return ResponseEntity.ok().body(new AuthResponse(jwtToken));
+}
+
 
     // ----------- LOGIN (Returns JWT) -----------
     @PostMapping("/login")
