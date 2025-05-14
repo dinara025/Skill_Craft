@@ -46,7 +46,8 @@ const PostCard = ({
     username: post.username,
     avatar: post.avatar,
     tags: post.tags,
-    createdAt: post.createdAt
+    createdAt: post.createdAt,
+    comments: post.comments
   });
 
   const isVideo = (url) => {
@@ -66,7 +67,7 @@ const PostCard = ({
   const [showComments, setShowComments] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [modalMediaIndex, setModalMediaIndex] = useState(0);
-  const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState(post.commentsList || []);
   const [playingVideos, setPlayingVideos] = useState({});
   const videoRefs = useRef({});
   const navigate = useNavigate();
@@ -499,7 +500,7 @@ const PostCard = ({
             aria-label="Comment on post"
           >
             <FaComment />
-            <span className="action-count">{comments.length}</span>
+            <span className="action-count">{post.comments || 0}</span>
           </Button>
           <Button variant="link" className="action-btn share-btn" aria-label="Share post">
             <FaShare />

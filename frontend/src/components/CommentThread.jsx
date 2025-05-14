@@ -29,7 +29,6 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
       const timeLeft = expiry - Date.now();
       if (timeLeft > 0) {
         const timeout = setTimeout(() => {
-          // Consider using react-toastify for better UX
           alert('Your session has expired. Please log in again.');
           handleLogout();
         }, timeLeft);
@@ -360,7 +359,7 @@ const CommentThread = ({ postId, user, userId, isPostOwner, onAddComment, onComm
           disabled={isPosting}
         />
         <Button type="submit" variant="primary" disabled={isPosting}>
-          {isPosting ? <Spinner animation="border" size="sm" /> : 'Post'}
+          {isPosting ? <Spinner animation="border" size="small" /> : 'Post'}
         </Button>
       </Form>
 
