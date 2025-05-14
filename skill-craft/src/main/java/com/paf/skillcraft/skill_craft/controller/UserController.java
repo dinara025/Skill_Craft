@@ -8,9 +8,14 @@ import com.paf.skillcraft.skill_craft.dto.AuthResponse;
 
 import java.util.List;
 import java.util.Optional;
+import java.io.IOException;
+import jakarta.servlet.http.HttpServletResponse;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;  // To return better responses
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -85,4 +90,38 @@ public ResponseEntity<?> register(@RequestParam String username, @RequestParam S
         }
         return ResponseEntity.ok(updatedUser);
     }
+
+    @GetMapping("/oauth2/success")
+    public void oauth2Success(OAuth2AuthenticationToken authentication, HttpServletResponse response) throws IOException
+    {
+    OAuth2User oauthUser = authentication.getPrincipal();
+
+    String email = oauthUser.getAttribute("email");
+    String name = oauthUser.getAttribute("name");
+
+    // Check if the user already exists by username (email in this case)
+    Optional<User> userOpt = userService.getUserByUsername(email);
+    User user;
+
+    if (userOpt.isPresent()) {
+        user = userOpt.get();
+    } else {
+        // Create a new user with only username and a dummy password
+        user = new User();
+        user.setUsername(email);
+        user.setPassword(""); // no password for OAuth users
+        user.setRole("USER"); // optional but explicit
+        user = userService.saveUser(user);
+    }
+
+    // Generate JWT using your CustomUserDetails wrapper
+    CustomUserDetails userDetails = new CustomUserDetails(user);
+    String jwtToken = jwtUtil.generateToken(userDetails);
+
+    response.sendRedirect("http://localhost:3000/oauth2/success?token=" + jwtToken);
+
+}
+
+
+    
 }

@@ -16,6 +16,7 @@ import UserProfile from "./components/UserProfile";
 import AdminLoginPage from "./components/AdminLoginPage";
 import ThreadsPage from "./components/ThreadsPage";
 import ProfileEdit from "./components/ProfileEdit"; // Added ProfileEdit import
+import OAuth2RedirectHandler from "./components/OAuth2RedirectHandler";
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -80,48 +81,60 @@ function App() {
       localStorage.setItem("usersId", userData.id);
     } catch (err) {
       console.error("Login error:", err);
+      localStorage.clear();
+      setLoggedInUser(null);
     }
   };
 
   return (
     <Router>
       <div className="app">
-        {!loggedInUser ? (
-          <Routes>
-            <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
-            <Route path="*" element={<Navigate to="/" />} />
-            <Route path="/admin-login" element={<AdminLoginPage />} />
-          </Routes>
-        ) : (
-          <Routes>
-            <Route path="/" element={<MainPage user={loggedInUser} />} />
-            <Route
-              path="/create-post"
-              element={<CreatePost user={loggedInUser.id} />}
-            />
-            <Route
-              path="/follow-system"
-              element={<FollowSystem senderId={loggedInUser.username} />}
-            />
-            <Route
-              path="/learning-plans"
-              element={<LearningPlans user={loggedInUser} />}
-            />
-            <Route
-              path="/update-post/:id"
-              element={<UpdatePost user={loggedInUser} />}
-            />
-            <Route path="/threads" element={<ThreadsPage />} />
-            <Route path="/Learning" element={<Course />} />
-            <Route
-              path="/profile"
-              element={<UserProfile user={loggedInUser} />}
-            />
-            <Route path="/profile/edit" element={<ProfileEdit />} />{" "}
-            {/* Added route for ProfileEdit */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        )}
+        <Routes>
+          {/* OAuth2 redirect handler is always available */}
+          <Route
+            path="/oauth2/success"
+            element={<OAuth2RedirectHandler onLogin={handleLogin} />}
+          />
+          {!loggedInUser ? (
+            <>
+              <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
+              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
+            </>
+          ) : (
+            <>
+              <Route path="/" element={<MainPage user={loggedInUser} />} />
+              <Route
+                path="/create-post"
+                element={<CreatePost user={loggedInUser.id} />}
+              />
+              <Route
+                path="/follow-system"
+                element={<FollowSystem senderId={loggedInUser.username} />}
+              />
+              <Route
+                path="/learning-plans"
+                element={<LearningPlans user={loggedInUser} />}
+              />
+              <Route
+                path="/update-post/:id"
+                element={<UpdatePost user={loggedInUser} />}
+              />
+              <Route path="/threads" element={<ThreadsPage />} />
+              <Route path="/Learning" element={<Course />} />
+              <Route
+                path="/profile"
+                element={<UserProfile user={loggedInUser} />}
+              />
+              <Route path="/profile/edit" element={<ProfileEdit />} />{" "}
+              {/* Added route for ProfileEdit */}
+              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </>
+          )}
+        </Routes>
       </div>
     </Router>
   );

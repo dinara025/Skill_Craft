@@ -65,4 +65,9 @@ public class UserService {
         }
         return null; // User not found
     }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+    
 }
