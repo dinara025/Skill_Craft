@@ -34,3 +34,13 @@ export const deleteRequest = (id) =>
   axios.delete(`${API_BASE}/${id}`, {
     headers: getAuthHeaders().headers, // ✅ Correct header usage
   });
+
+export const getFollowersCount = (receiverId) =>
+  axios.get(`${API_BASE}/count/followers/${receiverId}`, {
+    headers: getAuthHeaders().headers,
+  });
+
+export const getFollowingCount = (senderId) =>
+  axios.get(`${API_BASE}/count/following/${senderId}`, {
+    headers: getAuthHeaders().headers,
+  });
