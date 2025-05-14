@@ -77,7 +77,7 @@ public class PostService {
         return null;
     }
 
-    public List<PostResponseDto> getAllPostsWithUserDetails() {
+    public List<PostResponseDto> getAllPostsWithUserDetails(String currentUserId) {
         List<Post> posts = postRepository.findAll();
 
         return posts.stream().map(post -> {
@@ -93,7 +93,8 @@ public class PostService {
             dto.setTemplate(post.getTemplate());
             dto.setCreatedAt(post.getCreatedAt());
             dto.setLikeCount(post.getLikeCount());
-            // dto.setLikes(post.getLikes());
+            dto.setLikes(post.getLikes());
+            dto.setIsLiked(post.getLikes().contains(currentUserId));
             return dto;
         }).collect(Collectors.toList());
     }

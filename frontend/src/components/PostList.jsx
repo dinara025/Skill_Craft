@@ -10,8 +10,6 @@ const PostList = ({ userId, user }) => {
   const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(null);
 
-  const samplePosts = []; // Assuming samplePosts is empty or defined elsewhere
-
   // ------------------ TOKEN EXPIRATION CHECK ------------------
   const isTokenExpired = (token) => {
     try {
@@ -40,7 +38,6 @@ const PostList = ({ userId, user }) => {
       const timeLeft = expiry - Date.now();
       if (timeLeft > 0) {
         const timeout = setTimeout(() => {
-          // Consider using react-toastify for better UX
           alert('Your session has expired. Please log in again.');
           handleLogout();
         }, timeLeft);
@@ -52,6 +49,7 @@ const PostList = ({ userId, user }) => {
     }
   }, []);
 
+  // ------------------ FETCH POSTS ------------------
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -63,7 +61,8 @@ const PostList = ({ userId, user }) => {
           return;
         }
 
-        const response = await fetch('http://localhost:8080/api/auth/posts', {
+        // Include currentUserId to fetch isLiked status
+        const response = await fetch(`http://localhost:8080/api/auth/posts?currentUserId=${userId}`, {
           headers: {
             ...getAuthHeaders().headers,
             'Accept': 'application/json'
@@ -91,40 +90,32 @@ const PostList = ({ userId, user }) => {
         }
 
         if (Array.isArray(data) && data.length > 0) {
+          // Transform posts to match PostCard.jsx expectations
           const transformedPosts = data.map(post => ({
             id: post.id || Math.random().toString(36).substr(2, 9),
-            createdAt: post.createdAt || new Date().toISOString(),
-            user: {
-              name: post.username || 'Unknown User',
-              handle: `@${(post.userId || 'user').toLowerCase()}`,
-              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
-              verified: false
-            },
-            content: {
-              text: post.content || '',
-              mediaLinks: post.mediaLinks || [],
-              likes: post.likes || 0,
-              comments: post.comments || 0,
-              shares: post.shares || 0,
-              isLiked: false,
-              isBookmarked: false,
-              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently',
-              timestamp: post.createdAt ? new Date(post.createdAt) : new Date()
-            },
+            title: post.title || '',
+            content: post.content || '',
+            mediaLinks: post.mediaLinks || [],
             tags: post.tags || [],
-            userId: String(post.userId || 'unknown')
+            template: post.template || 'general',
+            createdAt: post.createdAt || new Date().toISOString(),
+            userId: String(post.userId || 'unknown'),
+            username: post.username || 'Unknown User',
+            avatar: post.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg',
+            likeCount: post.likeCount || 0,
+            likes: post.likes || [],
+            isLiked: post.isLiked || false,
+            isBookmarked: false // Client-side state, not in API
           }));
 
+          // Sort by createdAt in descending order
           transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setPosts(transformedPosts);
         } else {
-          const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          setPosts(sortedSamplePosts);
+          setPosts([]);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setPosts(sortedSamplePosts);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -134,10 +125,12 @@ const PostList = ({ userId, user }) => {
     fetchPosts();
   }, [userId]);
 
+  // ------------------ TOGGLE DROPDOWN ------------------
   const toggleDropdown = (postId) => {
     setShowDropdown(prev => (prev === postId ? null : postId));
   };
 
+  // ------------------ DELETE POST ------------------
   const handleDeletePost = async (postId) => {
     const post = posts.find(p => p.id === postId);
     if (!post) {
@@ -183,6 +176,7 @@ const PostList = ({ userId, user }) => {
     }
   };
 
+  // ------------------ RENDER ------------------
   return (
     <div className="post-list-container">
       {loading ? (

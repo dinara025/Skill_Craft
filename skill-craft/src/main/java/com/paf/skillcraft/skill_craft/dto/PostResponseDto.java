@@ -1,6 +1,7 @@
 package com.paf.skillcraft.skill_craft.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PostResponseDto {
@@ -11,36 +12,39 @@ public class PostResponseDto {
     private List<String> tags;
     private String template;
     private LocalDateTime createdAt;
-
     private String userId;
     private String username;
     private String avatar;
-
     private int likeCount;
-    private List<String> likedUserIds;
+    private List<String> likes;
+    private boolean isLiked;
 
     // Constructors
-    public PostResponseDto() {}
+    public PostResponseDto() {
+        this.mediaLinks = new ArrayList<>();
+        this.tags = new ArrayList<>();
+        this.likes = new ArrayList<>();
+    }
 
     public PostResponseDto(String id, String title, String content, List<String> mediaLinks, List<String> tags,
                            String template, LocalDateTime createdAt, String userId, String username,
-                           String avatar, int likeCount, List<String> likedUserIds) {
+                           String avatar, int likeCount, List<String> likes, boolean isLiked) {
         this.id = id;
         this.title = title;
         this.content = content;
-        this.mediaLinks = mediaLinks;
-        this.tags = tags;
+        this.mediaLinks = mediaLinks != null ? mediaLinks : new ArrayList<>();
+        this.tags = tags != null ? tags : new ArrayList<>();
         this.template = template;
         this.createdAt = createdAt;
         this.userId = userId;
         this.username = username;
         this.avatar = avatar;
         this.likeCount = likeCount;
-        this.likedUserIds = likedUserIds;
+        this.likes = likes != null ? likes : new ArrayList<>();
+        this.isLiked = isLiked;
     }
 
     // Getters and Setters
-
     public String getId() {
         return id;
     }
@@ -70,7 +74,7 @@ public class PostResponseDto {
     }
 
     public void setMediaLinks(List<String> mediaLinks) {
-        this.mediaLinks = mediaLinks;
+        this.mediaLinks = mediaLinks != null ? mediaLinks : new ArrayList<>();
     }
 
     public List<String> getTags() {
@@ -78,7 +82,7 @@ public class PostResponseDto {
     }
 
     public void setTags(List<String> tags) {
-        this.tags = tags;
+        this.tags = tags != null ? tags : new ArrayList<>();
     }
 
     public String getTemplate() {
@@ -117,9 +121,9 @@ public class PostResponseDto {
         return avatar;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
+    // public void setAvatar(String avatar BIC) {
+    //     this.avatar = avatar;
+    // }
 
     public int getLikeCount() {
         return likeCount;
@@ -129,11 +133,19 @@ public class PostResponseDto {
         this.likeCount = likeCount;
     }
 
-    public List<String> getLikedUserIds() {
-        return likedUserIds;
+    public List<String> getLikes() {
+        return likes;
     }
 
-    public void setLikedUserIds(List<String> likedUserIds) {
-        this.likedUserIds = likedUserIds;
+    public void setLikes(List<String> likes) {
+        this.likes = likes != null ? likes : new ArrayList<>();
+    }
+
+    public boolean getIsLiked() {
+        return isLiked;
+    }
+
+    public void setIsLiked(boolean isLiked) {
+        this.isLiked = isLiked;
     }
 }
