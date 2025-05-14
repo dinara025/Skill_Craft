@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
+import { formatDistanceToNow } from 'date-fns'; // Added import
 import PostCard from './PostCard';
 import { getAuthHeaders } from '../services/authService';
+import { fetchCommentsByPostId } from '../services/commentService';
 import '../styles/PostList.css';
 
 const PostList = ({ userId, user }) => {
@@ -49,7 +51,7 @@ const PostList = ({ userId, user }) => {
     }
   }, []);
 
-  // ------------------ FETCH POSTS ------------------
+  // ------------------ FETCH POSTS AND COMMENTS ------------------
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -61,7 +63,7 @@ const PostList = ({ userId, user }) => {
           return;
         }
 
-        // Include currentUserId to fetch isLiked status
+        // Fetch posts
         const response = await fetch(`http://localhost:8080/api/auth/posts?currentUserId=${userId}`, {
           headers: {
             ...getAuthHeaders().headers,
@@ -91,21 +93,40 @@ const PostList = ({ userId, user }) => {
 
         if (Array.isArray(data) && data.length > 0) {
           // Transform posts to match PostCard.jsx expectations
-          const transformedPosts = data.map(post => ({
-            id: post.id || Math.random().toString(36).substr(2, 9),
-            title: post.title || '',
-            content: post.content || '',
-            mediaLinks: post.mediaLinks || [],
-            tags: post.tags || [],
-            template: post.template || 'general',
-            createdAt: post.createdAt || new Date().toISOString(),
-            userId: String(post.userId || 'unknown'),
-            username: post.username || 'Unknown User',
-            avatar: post.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg',
-            likeCount: post.likeCount || 0,
-            likes: post.likes || [],
-            isLiked: post.isLiked || false,
-            isBookmarked: false // Client-side state, not in API
+          const transformedPosts = await Promise.all(data.map(async post => {
+            let commentsList = [];
+            let commentCount = 0;
+            try {
+              const commentResponse = await fetchCommentsByPostId(post.id);
+              commentsList = commentResponse.data.map(comment => ({
+                id: comment.id,
+                user: { id: comment.userId, name: comment.username || `User_${comment.userId}` },
+                text: comment.content,
+                timeAgo: formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
+              }));
+              commentCount = commentsList.length;
+            } catch (commentError) {
+              console.error(`Error fetching comments for post ${post.id}:`, commentError);
+            }
+
+            return {
+              id: post.id || Math.random().toString(36).substr(2, 9),
+              title: post.title || '',
+              content: post.content || '',
+              mediaLinks: post.mediaLinks || [],
+              tags: post.tags || [],
+              template: post.template || 'general',
+              createdAt: post.createdAt || new Date().toISOString(),
+              userId: String(post.userId || 'unknown'),
+              username: post.username || 'Unknown User',
+              avatar: post.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg',
+              likeCount: post.likeCount || 0,
+              likes: post.likes || [],
+              isLiked: post.isLiked || false,
+              isBookmarked: false,
+              comments: commentCount,
+              commentsList
+            };
           }));
 
           // Sort by createdAt in descending order
