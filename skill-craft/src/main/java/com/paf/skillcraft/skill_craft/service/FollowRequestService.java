@@ -74,4 +74,13 @@ public class FollowRequestService {
     public void deleteFollowRequest(String id) {
         followRequestRepository.deleteById(id);
     }
+
+    public long countFollowers(String receiverId) {
+        return followRequestRepository.countByReceiverIdAndStatus(receiverId, "accepted");
+    }
+    
+    public long countFollowing(String senderId) {
+        return followRequestRepository.countBySenderIdAndStatus(senderId, "accepted");
+    }
+    
 }

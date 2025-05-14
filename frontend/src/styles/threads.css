@@ -32,8 +32,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Thread Header */
@@ -179,12 +183,12 @@
   .thread-view {
     padding: 15px;
   }
-  
+
   .thread-meta {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .message-footer {
     flex-direction: column;
     align-items: flex-start;

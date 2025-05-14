@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa';
-import ThreadList from '../components/ThreadList';
-import ThreadView from '../components/ThreadView';
-import NewThreadForm from '../components/NewThreadForm';
-import '../styles/ThreadsPage.css';
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaPlus, FaArrowLeft } from "react-icons/fa";
+import ThreadList from "../components/ThreadList";
+import ThreadView from "../components/ThreadView";
+import NewThreadForm from "../components/NewThreadForm";
+import "../styles/ThreadsPage.css";
 
 const ThreadsPage = () => {
   const [selectedThread, setSelectedThread] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [showThreadList, setShowThreadList] = useState(true);
   const [showNewThreadForm, setShowNewThreadForm] = useState(false);
@@ -19,12 +19,12 @@ const ThreadsPage = () => {
       setIsMobileView(window.innerWidth < 768);
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleThreadCreated = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     setShowNewThreadForm(false);
     if (isMobileView) setShowThreadList(true);
   };
@@ -42,7 +42,11 @@ const ThreadsPage = () => {
   return (
     <div className="threads-container">
       {/* Left sidebar - Thread List */}
-      <div className={`threads-sidebar ${!isMobileView || showThreadList ? 'visible' : 'hidden'}`}>
+      <div
+        className={`threads-sidebar ${
+          !isMobileView || showThreadList ? "visible" : "hidden"
+        }`}
+      >
         <div className="threads-header">
           <h2>Community Discussions</h2>
           <div className="threads-search">
@@ -54,7 +58,7 @@ const ThreadsPage = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button 
+          <button
             className="new-thread-btn"
             onClick={() => setShowNewThreadForm(true)}
           >
@@ -64,7 +68,7 @@ const ThreadsPage = () => {
 
         {showNewThreadForm ? (
           <div className="new-thread-form-container">
-            <button 
+            <button
               className="back-button"
               onClick={() => setShowNewThreadForm(false)}
             >
@@ -73,16 +77,20 @@ const ThreadsPage = () => {
             <NewThreadForm onThreadCreated={handleThreadCreated} />
           </div>
         ) : (
-          <ThreadList 
-            key={refreshKey} 
-            onSelectThread={handleSelectThread} 
+          <ThreadList
+            key={refreshKey}
+            onSelectThread={handleSelectThread}
             searchQuery={searchQuery}
           />
         )}
       </div>
 
       {/* Right panel - Thread View */}
-      <div className={`thread-view-container ${(!isMobileView || !showThreadList) ? 'visible' : 'hidden'}`}>
+      <div
+        className={`thread-view-container ${
+          !isMobileView || !showThreadList ? "visible" : "hidden"
+        }`}
+      >
         {selectedThread ? (
           <>
             {isMobileView && (

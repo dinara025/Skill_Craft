@@ -65,4 +65,17 @@ public class FollowRequestController {
     public Optional<FollowRequest> getFollowRequest(@PathVariable String id) {
         return followRequestService.getRequestById(id);
     }
+
+        // Get number of followers for a user (receiverId)
+    @GetMapping("/count/followers/{receiverId}")
+    public long countFollowers(@PathVariable String receiverId) {
+        return followRequestService.countFollowers(receiverId);
+    }
+
+    // Get number of users the given user is following (senderId)
+    @GetMapping("/count/following/{senderId}")
+    public long countFollowing(@PathVariable String senderId) {
+        return followRequestService.countFollowing(senderId);
+    }
+
 }
