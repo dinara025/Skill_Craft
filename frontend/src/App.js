@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // ✅ Added useEffect
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,19 +9,18 @@ import AuthPage from "./components/AuthPage";
 import MainPage from "./components/MainPage";
 import FollowSystem from "./components/FollowSystem";
 import CreatePost from "./components/CreatePost";
-
-import LearningPlans from "./components/LearningPlans"; // Added LearningPlans also
+import LearningPlans from "./components/LearningPlans";
 import Course from "./components/CourseManager";
-
 import UpdatePost from "./components/UpdatePost";
 import UserProfile from "./components/UserProfile";
 import AdminLoginPage from "./components/AdminLoginPage";
 import ThreadsPage from "./components/ThreadsPage";
+import ProfileEdit from "./components/ProfileEdit"; // Added ProfileEdit import
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
 
-  // ✅ Auto-login if token is saved in localStorage
+  // Auto-login if token is saved in localStorage
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
     const username = localStorage.getItem("jwtUsername");
@@ -57,7 +56,7 @@ function App() {
     }
   }, []);
 
-  // ✅ Update setLoggedInUser to also save username to localStorage
+  // Update setLoggedInUser to also save username to localStorage
   const handleLogin = async ({ username, token }) => {
     localStorage.setItem("jwtToken", token);
     localStorage.setItem("jwtUsername", username);
@@ -89,14 +88,12 @@ function App() {
       <div className="app">
         {!loggedInUser ? (
           <Routes>
-            <Route path="/" element={<AuthPage onLogin={handleLogin} />} />{" "}
-            {/* ✅ Changed to use handleLogin */}
+            <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
             <Route path="*" element={<Navigate to="/" />} />
             <Route path="/admin-login" element={<AdminLoginPage />} />
           </Routes>
         ) : (
           <Routes>
-            {/* <Route path="/" element={<MainPage user={loggedInUser} />} /> */}
             <Route path="/" element={<MainPage user={loggedInUser} />} />
             <Route
               path="/create-post"
@@ -115,14 +112,14 @@ function App() {
               element={<UpdatePost user={loggedInUser} />}
             />
             <Route path="/threads" element={<ThreadsPage />} />
-            <Route path="*" element={<Navigate to="/" />} />
-            {/* course management page */}
             <Route path="/Learning" element={<Course />} />
-            =======
             <Route
               path="/profile"
               element={<UserProfile user={loggedInUser} />}
             />
+            <Route path="/profile/edit" element={<ProfileEdit />} />{" "}
+            {/* Added route for ProfileEdit */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         )}
       </div>

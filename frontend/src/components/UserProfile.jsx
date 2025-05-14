@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "../styles/UserProfile.css";
 
 const UserProfile = ({ user }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("posts");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         if (user?.id) {
-          const response = await axios.get(`/api/posts/user/${user.id}`);
+          const response = await axios.get(`/api/auth/posts/user/${user.id}`);
           setPosts(response.data);
         }
       } catch (err) {
@@ -23,6 +25,11 @@ const UserProfile = ({ user }) => {
 
     fetchPosts();
   }, [user]);
+
+  // Handler for edit button click
+  const handleEditProfile = () => {
+    navigate("/profile/edit");
+  };
 
   if (loading) return (
     <div className="loading-spinner">
@@ -43,7 +50,10 @@ const UserProfile = ({ user }) => {
               alt="Profile"
               className="profile-avatar"
             />
-            <button className="edit-profile-button">
+            <button 
+              className="edit-profile-button"
+              onClick={handleEditProfile}
+            >
               <i className="fas fa-camera"></i> Edit
             </button>
           </div>

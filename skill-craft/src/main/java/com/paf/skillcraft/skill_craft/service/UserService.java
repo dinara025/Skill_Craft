@@ -50,5 +50,19 @@ public class UserService {
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
-    
+
+    // ----------- UPDATE PROFILE -----------
+    public User updateProfile(String username, String bio, String profilePhoto, String education, List<String> skills) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Update only provided fields
+            if (bio != null) user.setBio(bio);
+            if (profilePhoto != null) user.setProfilePhoto(profilePhoto);
+            if (education != null) user.setEducation(education);
+            if (skills != null) user.setSkills(skills);
+            return userRepository.save(user);
+        }
+        return null; // User not found
+    }
 }

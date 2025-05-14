@@ -1,272 +1,296 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Container, Card, Form, Button, Spinner, Alert } from 'react-bootstrap';
-import { FaImage, FaVideo, FaFileAlt, FaTimes } from 'react-icons/fa';
-import Header from '../components/Header';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { getAuthHeaders } from '../services/authService';
 import '../styles/UpdatePost.css';
 
-const UpdatePost = ({ user }) => {
-  const { postId } = useParams();
-  const navigate = useNavigate();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [content, setContent] = useState('');
-  const [mediaLinks, setMediaLinks] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+const API_BASE = 'http://localhost:8080/api/auth/posts';
+const MAX_MEDIA = 3;
+const MAX_VIDEO_DURATION = 30;
 
-  // Fetch post data
+const UpdatePost = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [postData, setPostData] = useState({
+    content: '',
+    mediaLinks: [],
+    template: 'general'
+  });
+  const [newMediaFiles, setNewMediaFiles] = useState([]);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // In a real app, you would fetch the post from your API
-        // const response = await fetch(`http://localhost:8080/api/posts/${postId}`);
-        // const data = await response.json();
-        
-        // For demo purposes, we'll use a mock post
-        const mockPost = {
-          id: postId,
-          content: {
-            text: "This is the post content that will be edited. Just published my new course on Advanced React Patterns! Check it out and let me know what you think. #react #frontend",
-            mediaLinks: [
-              "https://source.unsplash.com/600x400/?coding,react",
-              "https://source.unsplash.com/600x400/?javascript,code"
-            ]
-          }
-        };
-        
-        setPost(mockPost);
-        setContent(mockPost.content.text);
-        setMediaLinks(mockPost.content.mediaLinks || []);
+        const response = await axios.get(`${API_BASE}/${id}`, {
+          headers: getAuthHeaders().headers
+        });
+        setPostData({
+          content: response.data.content || '',
+          mediaLinks: response.data.mediaLinks || [],
+          template: response.data.template || 'general'
+        });
+        setIsLoading(false);
       } catch (err) {
-        setError('Failed to load post');
-        console.error('Error fetching post:', err);
-      } finally {
-        setLoading(false);
+        setError('Failed to fetch post');
+        setIsLoading(false);
       }
     };
-
     fetchPost();
-  }, [postId]);
+  }, [id]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPostData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const getVideoDuration = (file) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        resolve(video.duration);
+      };
+      video.onerror = reject;
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleMediaUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    setError('');
+
+    const totalMediaCount = postData.mediaLinks.length + newMediaFiles.length + files.length;
+    const hasVideoInExisting = postData.mediaLinks.some(link => link.includes('.mp4') || link.includes('.webm'));
+    const hasVideoInNew = newMediaFiles.some(file => file.type.startsWith('video/'));
+    const hasVideoInUpload = files.some(file => file.type.startsWith('video/'));
+
+    if (hasVideoInUpload && (postData.mediaLinks.length > 0 || newMediaFiles.length > 0 || files.length > 1)) {
+      setError('You can only upload one video at a time, with no other media.');
+      e.target.value = null;
+      return;
+    }
+
+    if ((hasVideoInExisting || hasVideoInNew) && files.length > 0) {
+      setError('You cannot add more media when a video is already selected.');
+      e.target.value = null;
+      return;
+    }
+
+    if (totalMediaCount > MAX_MEDIA) {
+      setError(`You can upload up to ${MAX_MEDIA} photos or one video.`);
+      e.target.value = null;
+      return;
+    }
+
+    const validFiles = [];
+    const invalidFiles = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        invalidFiles.push(`${file.name} (invalid type)`);
+        continue;
+      }
+
+      if (file.type.startsWith('video/')) {
+        try {
+          const duration = await getVideoDuration(file);
+          if (duration > MAX_VIDEO_DURATION) {
+            invalidFiles.push(`${file.name} (video exceeds ${MAX_VIDEO_DURATION} seconds)`);
+            continue;
+          }
+        } catch {
+          invalidFiles.push(`${file.name} (error reading video)`);
+          continue;
+        }
+      }
+
+      validFiles.push(file);
+    }
+
+    if (invalidFiles.length > 0) {
+      setError(`Invalid files: ${invalidFiles.join(', ')}`);
+    }
+
+    if (validFiles.length > 0) {
+      setNewMediaFiles(prev => [...prev, ...validFiles]);
+    }
+
+    e.target.value = null;
+  };
+
+  const removeMedia = (index, isExisting = false) => {
+    if (isExisting) {
+      setPostData(prev => ({
+        ...prev,
+        mediaLinks: prev.mediaLinks.filter((_, i) => i !== index)
+      }));
+    } else {
+      setNewMediaFiles(prev => prev.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitError(null);
+    setError('');
 
     try {
-      // In a real app, you would send the updated post to your API
-      const response = await fetch(`http://localhost:8080/api/auth//posts/${postId}`, {
-        method: 'PUT',
+      // In a real application, you'd upload new media files to a storage service
+      // and get URLs. For now, we'll simulate this with local file names
+      const newMediaLinks = newMediaFiles.map(file => URL.createObjectURL(file));
+      
+      const updatedPost = {
+        content: postData.content,
+        mediaLinks: [...postData.mediaLinks, ...newMediaLinks],
+        template: postData.template
+      };
+
+      await axios.put(`${API_BASE}/${id}`, updatedPost, {
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: content,
-          mediaLinks: mediaLinks
-        }),
+          ...getAuthHeaders().headers,
+          'Content-Type': 'application/json'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update post');
-      }
-
-      // For demo purposes, we'll just log and navigate back
-      console.log('Post updated:', { content, mediaLinks });
-      navigate('/');
+      navigate('/posts');
     } catch (err) {
-      setSubmitError(err.message || 'Failed to update post');
-    } finally {
-      setIsSubmitting(false);
+      setError('Failed to update post');
     }
   };
 
-  const handleRemoveMedia = (index) => {
-    const newMediaLinks = [...mediaLinks];
-    newMediaLinks.splice(index, 1);
-    setMediaLinks(newMediaLinks);
-  };
-
-  const handleAddMedia = (e) => {
-    // In a real app, you would upload the file to your server
-    // and get back a URL to add to mediaLinks
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setMediaLinks([...mediaLinks, event.target.result]);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="update-post-page">
-        <Header />
-        <Container className="mt-4 text-center">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-          <p>Loading post...</p>
-        </Container>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="update-post-page">
-        <Header />
-        <Container className="mt-4">
-          <Alert variant="danger">{error}</Alert>
-          <Button variant="primary" onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
-        </Container>
-      </div>
-    );
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (error && !postData.content) return <div>{error}</div>;
 
   return (
-    <div className="update-post-page">
-      <Header />
-      
-      <Container className="mt-4">
-        <Card className="update-post-card">
-          <Card.Header>
-            <h4>Edit Post</h4>
-          </Card.Header>
-          
-          <Card.Body>
-            <Form onSubmit={handleSubmit}>
-              <Form.Group className="mb-3">
-                <Form.Control
-                  as="textarea"
-                  rows={5}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="What's on your mind?"
-                  className="post-content-input"
-                />
-              </Form.Group>
-              
-              {/* Media preview */}
-              {mediaLinks.length > 0 && (
-                <div className="media-preview-container">
-                  {mediaLinks.map((link, index) => (
-                    <div key={index} className="media-preview-item">
-                      <img 
-                        src={link} 
-                        alt={`Media ${index}`} 
-                        className="media-preview"
-                        onError={(e) => e.target.style.display = 'none'}
-                      />
-                      <button 
-                        type="button" 
-                        className="remove-media-btn"
-                        onClick={() => handleRemoveMedia(index)}
-                      >
-                        <FaTimes />
-                      </button>
+    <div className="update-post-page py-5">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-8">
+            <div className="update-post-card card">
+              <div className="card-header">
+                Update Post
+              </div>
+              <div className="card-body">
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="content" className="form-label">Content</label>
+                    <textarea
+                      className="form-control post-content-input"
+                      id="content"
+                      name="content"
+                      rows="5"
+                      value={postData.content}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Media</label>
+                    <div className="media-preview-container">
+                      {postData.mediaLinks.map((link, index) => (
+                        <div key={`existing-${index}`} className="media-preview-item">
+                          {link.includes('.mp4') || link.includes('.webm') ? (
+                            <video
+                              src={link}
+                              controls
+                              className="media-preview"
+                            />
+                          ) : (
+                            <img
+                              src={link}
+                              alt="Media preview"
+                              className="media-preview"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className="remove-media-btn"
+                            onClick={() => removeMedia(index, true)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {newMediaFiles.map((file, index) => (
+                        <div key={`new-${index}`} className="media-preview-item">
+                          {file.type.startsWith('video/') ? (
+                            <video
+                              src={URL.createObjectURL(file)}
+                              controls
+                              className="media-preview"
+                            />
+                          ) : (
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt="Media preview"
+                              className="media-preview"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className="remove-media-btn"
+                            onClick={() => removeMedia(index)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              {/* Media upload buttons */}
-              <div className="media-upload-buttons">
-                <input
-                  type="file"
-                  id="image-upload"
-                  accept="image/*"
-                  onChange={handleAddMedia}
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  as="label"
-                  htmlFor="image-upload"
-                  className="upload-btn"
-                >
-                  <FaImage className="me-2" /> Add Image
-                </Button>
-                
-                <input
-                  type="file"
-                  id="video-upload"
-                  accept="video/*"
-                  onChange={handleAddMedia}
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  as="label"
-                  htmlFor="video-upload"
-                  className="upload-btn ms-2"
-                >
-                  <FaVideo className="me-2" /> Add Video
-                </Button>
-                
-                <input
-                  type="file"
-                  id="file-upload"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleAddMedia}
-                  style={{ display: 'none' }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  as="label"
-                  htmlFor="file-upload"
-                  className="upload-btn ms-2"
-                >
-                  <FaFileAlt className="me-2" /> Add File
-                </Button>
+                    <div className="media-upload-buttons">
+                      <label className="btn btn-outline-primary upload-btn">
+                        Upload Media
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          multiple
+                          hidden
+                          onChange={handleMediaUpload}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="template" className="form-label">Template</label>
+                    <select
+                      className="form-select"
+                      id="template"
+                      name="template"
+                      value={postData.template}
+                      onChange={handleInputChange}
+                      disabled
+                    >
+                      <option value="general">General</option>
+                      <option value="learning-progress">Learning Progress</option>
+                      <option value="ask-question">Ask Question</option>
+                    </select>
+                  </div>
+
+                  {error && <div className="alert alert-danger">{error}</div>}
+
+                  <div className="post-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary me-2"
+                      onClick={() => navigate('/posts')}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Update Post
+                    </button>
+                  </div>
+                </form>
               </div>
-              
-              {submitError && (
-                <Alert variant="danger" className="mt-3">
-                  {submitError}
-                </Alert>
-              )}
-              
-              <div className="post-actions mt-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate('/')}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  className="ms-2"
-                  disabled={isSubmitting || !content.trim()}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-2"
-                      />
-                      Updating...
-                    </>
-                  ) : (
-                    'Update Post'
-                  )}
-                </Button>
-              </div>
-            </Form>
-          </Card.Body>
-        </Card>
-      </Container>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
