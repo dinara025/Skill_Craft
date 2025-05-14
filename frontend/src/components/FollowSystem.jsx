@@ -99,15 +99,31 @@ const FollowSystem = ({ senderId }) => {
     });
   };
 
-  const handleUnfollow = (friendUsername) => {
-    // Find the follow request where *I* am sender and status accepted
-    const request = sentRequests.find(
+  const handleUnfollow = async (friendUsername) => {
+    // First check if YOU sent the request and it was accepted
+    let request = sentRequests.find(
       (req) => req.receiverId === friendUsername && req.status === "accepted"
     );
-    if (request) {
-      handleDelete(request.id);
-    } else {
-      alert("Cannot unfollow this user (maybe they followed you instead)");
+
+    // If not, check if THEY followed you (you received the request)
+    if (!request) {
+      request = receivedRequests.find(
+        (req) => req.senderId === friendUsername && req.status === "accepted"
+      );
+    }
+
+    if (!request) {
+      alert("Cannot unfollow this user (maybe no accepted connection exists)");
+      return;
+    }
+
+    try {
+      await updateRequestStatus(request.id, "unfollowed");
+      await refreshData();
+      await loadUsers();
+    } catch (err) {
+      console.error("Error during unfollow:", err);
+      alert("Something went wrong while trying to unfollow");
     }
   };
 
