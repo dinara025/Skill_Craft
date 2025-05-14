@@ -1,23 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   sendFollowRequest,
   getSentRequests,
   getReceivedRequests,
   updateRequestStatus,
-  deleteRequest
-} from '../services/followService';
-import { getAllUsers } from '../services/authService';
-import { Tab, Nav, Button, ListGroup, Form, InputGroup } from 'react-bootstrap';
-import { FaSearch, FaUserPlus, FaUserCheck, FaUserTimes, FaUserClock, FaUserMinus } from 'react-icons/fa';
-import '../styles/FollowSystem.css';
+  deleteRequest,
+} from "../services/followService";
+import { getAllUsers } from "../services/authService";
+import { Tab, Nav, Button, ListGroup, Form, InputGroup } from "react-bootstrap";
+import {
+  FaSearch,
+  FaUserPlus,
+  FaUserCheck,
+  FaUserTimes,
+  FaUserClock,
+  FaUserMinus,
+} from "react-icons/fa";
+import "../styles/FollowSystem.css";
 
 const FollowSystem = ({ senderId }) => {
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [friends, setFriends] = useState([]);
-  const [activeTab, setActiveTab] = useState('sent');
+  const [activeTab, setActiveTab] = useState("sent");
   const [mutualFriends, setMutualFriends] = useState([]);
 
   const refreshData = async () => {
@@ -31,10 +38,10 @@ const FollowSystem = ({ senderId }) => {
     const res = await getAllUsers();
 
     const mySent = sentRequests
-      .filter(req => req.status === 'pending' || req.status === 'accepted')
-      .map(req => req.receiverId);
+      .filter((req) => req.status === "pending" || req.status === "accepted")
+      .map((req) => req.receiverId);
 
-    const filteredUsers = res.data.filter(user => {
+    const filteredUsers = res.data.filter((user) => {
       const isSelf = user.username === senderId;
       const iSent = mySent.includes(user.username);
       return !isSelf && !iSent;
@@ -45,17 +52,19 @@ const FollowSystem = ({ senderId }) => {
 
   const computeMutuals = () => {
     const outgoingAccepted = sentRequests
-      .filter(r => r.status === 'accepted')
-      .map(r => r.receiverId);
+      .filter((r) => r.status === "accepted")
+      .map((r) => r.receiverId);
 
     const incomingAccepted = receivedRequests
-      .filter(r => r.status === 'accepted')
-      .map(r => r.senderId);
+      .filter((r) => r.status === "accepted")
+      .map((r) => r.senderId);
 
     const allFriends = [...new Set([...outgoingAccepted, ...incomingAccepted])];
     setFriends(allFriends);
 
-    const mutuals = outgoingAccepted.filter(user => incomingAccepted.includes(user));
+    const mutuals = outgoingAccepted.filter((user) =>
+      incomingAccepted.includes(user)
+    );
     setMutualFriends(mutuals);
   };
 
@@ -93,16 +102,16 @@ const FollowSystem = ({ senderId }) => {
   const handleUnfollow = (friendUsername) => {
     // Find the follow request where *I* am sender and status accepted
     const request = sentRequests.find(
-      req => req.receiverId === friendUsername && req.status === 'accepted'
+      (req) => req.receiverId === friendUsername && req.status === "accepted"
     );
     if (request) {
       handleDelete(request.id);
     } else {
-      alert('Cannot unfollow this user (maybe they followed you instead)');
+      alert("Cannot unfollow this user (maybe they followed you instead)");
     }
   };
 
-  const filteredUsers = allUsers.filter(user =>
+  const filteredUsers = allUsers.filter((user) =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -127,7 +136,7 @@ const FollowSystem = ({ senderId }) => {
           <div className="search-results">
             {filteredUsers.length > 0 ? (
               <ListGroup>
-                {filteredUsers.map(user => (
+                {filteredUsers.map((user) => (
                   <ListGroup.Item key={user.id} className="user-item">
                     <div className="user-info">
                       <span className="username">{user.username}</span>
@@ -177,11 +186,12 @@ const FollowSystem = ({ senderId }) => {
         <Tab.Content className="follow-tab-content">
           {/* Sent Requests */}
           <Tab.Pane eventKey="sent">
-            {sentRequests.filter(req => req.status === 'pending').length > 0 ? (
+            {sentRequests.filter((req) => req.status === "pending").length >
+            0 ? (
               <ListGroup>
                 {sentRequests
-                  .filter(req => req.status === 'pending')
-                  .map(req => (
+                  .filter((req) => req.status === "pending")
+                  .map((req) => (
                     <ListGroup.Item key={req.id}>
                       {req.receiverId}
                       <Button
@@ -202,17 +212,18 @@ const FollowSystem = ({ senderId }) => {
 
           {/* Received Requests */}
           <Tab.Pane eventKey="received">
-            {receivedRequests.filter(req => req.status === 'pending').length > 0 ? (
+            {receivedRequests.filter((req) => req.status === "pending").length >
+            0 ? (
               <ListGroup>
                 {receivedRequests
-                  .filter(req => req.status === 'pending')
-                  .map(req => (
+                  .filter((req) => req.status === "pending")
+                  .map((req) => (
                     <ListGroup.Item key={req.id}>
                       {req.senderId}
                       <Button
                         variant="outline-success"
                         size="sm"
-                        onClick={() => handleAction(req.id, 'accepted')}
+                        onClick={() => handleAction(req.id, "accepted")}
                         className="float-end"
                       >
                         <FaUserCheck /> Accept
@@ -229,7 +240,7 @@ const FollowSystem = ({ senderId }) => {
           <Tab.Pane eventKey="followers">
             {friends.length > 0 ? (
               <ListGroup>
-                {friends.map(friendUsername => (
+                {friends.map((friendUsername) => (
                   <ListGroup.Item key={friendUsername}>
                     {friendUsername}
                     <Button
@@ -252,7 +263,7 @@ const FollowSystem = ({ senderId }) => {
           <Tab.Pane eventKey="mutual">
             {mutualFriends.length > 0 ? (
               <ListGroup>
-                {mutualFriends.map(username => (
+                {mutualFriends.map((username) => (
                   <ListGroup.Item key={username}>
                     {username}
                     <Button

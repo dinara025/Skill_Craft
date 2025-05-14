@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { registerUser } from '../services/authService';
-import { FaUser, FaLock, FaUserPlus, FaSpinner } from 'react-icons/fa';
-import '../styles/authForms.css';
+import React, { useState } from "react";
+import { registerUser } from "../services/authService";
+import { FaUser, FaLock, FaUserPlus, FaSpinner } from "react-icons/fa";
+import "../styles/authForms.css";
 
 const RegisterForm = ({ onLogin, switchToLogin }) => {
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    setError('');
+    setError("");
   };
 
   const handleRegister = async (e) => {
@@ -28,41 +28,41 @@ const RegisterForm = ({ onLogin, switchToLogin }) => {
     const { username, password, confirmPassword } = formData;
 
     if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
     if (username.length < 3) {
-      setError('Username must be at least 3 characters');
+      setError("Username must be at least 3 characters");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const res = await registerUser(username, password);
 
       if (res.data) {
-        localStorage.setItem('jwtToken', res.data.token);
-        localStorage.setItem('jwtUsername', username);
+        localStorage.setItem("jwtToken", res.data.token);
+        localStorage.setItem("jwtUsername", username);
         onLogin({ username, token: res.data.token });
       } else {
-        setError('Registration failed. Please try again.');
+        setError("Registration failed. Please try again.");
       }
     } catch (err) {
-      console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Username already exists');
+      console.error("Registration error:", err);
+      setError(err.response?.data?.message || "Username already exists");
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +111,7 @@ const RegisterForm = ({ onLogin, switchToLogin }) => {
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? '🙈' : '👁️'}
+              {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
 
@@ -130,29 +130,46 @@ const RegisterForm = ({ onLogin, switchToLogin }) => {
               type="button"
               className="password-toggle"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showConfirmPassword ? "Hide password" : "Show password"
+              }
             >
-              {showConfirmPassword ? '🙈' : '👁️'}
+              {showConfirmPassword ? "🙈" : "👁️"}
             </button>
           </div>
 
           <div className="password-strength">
-            <div 
-              className={`strength-bar ${formData.password.length === 0 ? 'empty' : 
-                formData.password.length < 6 ? 'weak' : 
-                formData.password.length < 10 ? 'medium' : 'strong'}`}
+            <div
+              className={`strength-bar ${
+                formData.password.length === 0
+                  ? "empty"
+                  : formData.password.length < 6
+                  ? "weak"
+                  : formData.password.length < 10
+                  ? "medium"
+                  : "strong"
+              }`}
             ></div>
             <small>
-              {formData.password.length === 0 ? '' : 
-               formData.password.length < 6 ? 'Weak' : 
-               formData.password.length < 10 ? 'Medium' : 'Strong'}
+              {formData.password.length === 0
+                ? ""
+                : formData.password.length < 6
+                ? "Weak"
+                : formData.password.length < 10
+                ? "Medium"
+                : "Strong"}
             </small>
           </div>
 
           <button
             type="submit"
             className="auth-button"
-            disabled={isLoading || !formData.username || !formData.password || !formData.confirmPassword}
+            disabled={
+              isLoading ||
+              !formData.username ||
+              !formData.password ||
+              !formData.confirmPassword
+            }
           >
             {isLoading ? (
               <>
@@ -176,7 +193,8 @@ const RegisterForm = ({ onLogin, switchToLogin }) => {
             </p> */}
             <div className="terms-agreement">
               <small>
-                By registering, you agree to our Terms of Service and Privacy Policy
+                By Registering, you agree to our Terms of Service and Privacy
+                Policy
               </small>
             </div>
           </div>
