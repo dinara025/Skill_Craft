@@ -5,6 +5,7 @@ import com.paf.skillcraft.skill_craft.repository.FollowRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,11 +24,16 @@ public class FollowRequestService {
             FollowRequest existingRequest = existing.get(0);
             String status = existingRequest.getStatus();
 
-            // Only block if current status is not 'unfollow' or 'declined'
-            if (!"unfollow".equalsIgnoreCase(status) && !"declined".equalsIgnoreCase(status)) {
-                return existingRequest; // Already exists, no need to create new
-            }
+            if ("unfollow".equalsIgnoreCase(status) || "declined".equalsIgnoreCase(status)) {
+            // ✅ Reuse old request — set status back to pending
+            existingRequest.setStatus("pending");
+            existingRequest.setUpdatedAt(LocalDateTime.now());
+            return followRequestRepository.save(existingRequest);
         }
+
+        // ❌ Already pending or accepted — block sending again
+        return existingRequest;
+    }
 
         // Check if reverse direction request exists (receiver -> sender)
         List<FollowRequest> reverse = followRequestRepository.findBySenderIdAndReceiverId(receiverId, senderId);
@@ -36,11 +42,11 @@ public class FollowRequestService {
             FollowRequest reverseRequest = reverse.get(0);
             String reverseStatus = reverseRequest.getStatus();
         
-            // If already accepted, no need for a new request
-            if ("accepted".equalsIgnoreCase(reverseStatus)) {
-                return reverseRequest; // BLOCK creating duplicate accepted requests
-            }
-            // ✅ Allow creating a new request EVEN IF the reverse request is pending, unfollow, or declined
+            // // If already accepted, no need for a new request
+            // if ("accepted".equalsIgnoreCase(reverseStatus)) {
+            //     return reverseRequest; // BLOCK creating duplicate accepted requests
+            // }
+            // // ✅ Allow creating a new request EVEN IF the reverse request is pending, unfollow, or declined
         }
         
 
