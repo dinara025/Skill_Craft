@@ -121,7 +121,7 @@ public class PostResponseDto {
         return avatar;
     }
 
-    // public void setAvatar(String avatar BIC) {
+    // public void setAvatar(String avatar) {
     //     this.avatar = avatar;
     // }
 
