@@ -254,24 +254,27 @@ const FollowSystem = ({ senderId }) => {
 
           {/* Followers */}
           <Tab.Pane eventKey="followers">
-            {friends.length > 0 ? (
+            {receivedRequests.filter((req) => req.status === "accepted")
+              .length > 0 ? (
               <ListGroup>
-                {friends.map((friendUsername) => (
-                  <ListGroup.Item key={friendUsername}>
-                    {friendUsername}
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => handleUnfollow(friendUsername)}
-                      className="float-end"
-                    >
-                      <FaUserMinus /> Unfollow
-                    </Button>
-                  </ListGroup.Item>
-                ))}
+                {receivedRequests
+                  .filter((req) => req.status === "accepted")
+                  .map((req) => (
+                    <ListGroup.Item key={req.id}>
+                      {req.senderId}
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleUnfollow(req.senderId)}
+                        className="float-end"
+                      >
+                        <FaUserMinus /> Unfollow
+                      </Button>
+                    </ListGroup.Item>
+                  ))}
               </ListGroup>
             ) : (
-              <div className="empty-state">No friends yet</div>
+              <div className="empty-state">No followers yet</div>
             )}
           </Tab.Pane>
 
