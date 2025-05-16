@@ -70,7 +70,7 @@ const UserProfile = ({ user }) => {
         <div className="profile-cover">
           <div className="profile-avatar-container">
             <img
-              src={user.profilePicture || "/default-profile.png"}
+              src={user.profilePhoto || "/default-profile.png"}
               alt="Profile"
               className="profile-avatar"
             />
@@ -83,6 +83,26 @@ const UserProfile = ({ user }) => {
         <div className="profile-info">
           <h1 className="profile-name">{user.username}</h1>
           <p className="profile-bio">{user.bio || "No bio yet"}</p>
+          <div className="profile-details">
+            {user.education && (
+              <div className="profile-detail-item">
+                <i className="fas fa-graduation-cap"></i>
+                <span>{user.education}</span>
+              </div>
+            )}
+            {user.skills?.length > 0 && (
+              <div className="profile-detail-item">
+                <i className="fas fa-tools"></i>
+                <div className="skills-list">
+                  {user.skills.map((skill, idx) => (
+                    <span key={idx} className="skill-tag">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="profile-stats">
             <div className="stat-item">
