@@ -5,7 +5,7 @@ import {
   FaUserPlus,
   FaChalkboardTeacher,
   FaBook,
-  FaComments
+  FaComments,
 } from 'react-icons/fa';
 import { BsPlusCircleFill } from 'react-icons/bs';
 import Header from '../components/Header';
@@ -13,10 +13,6 @@ import PostList from '../components/PostList';
 import NavBar from '../components/NavBar';
 import CreatePost from './CreatePost';
 import '../styles/MainPage.css';
-import { FaLightbulb } from 'react-icons/fa';
-
-
-// ... other imports remain the same
 
 const MainPage = ({ user }) => {
   const navigate = useNavigate();
@@ -26,9 +22,11 @@ const MainPage = ({ user }) => {
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Token payload:', payload); // Debug token
       const expiry = payload.exp * 1000;
-      return Date.now() >= (expiry - 5000);
+      return Date.now() >= expiry - 5000;
     } catch (error) {
+      console.error('Error decoding token:', error);
       return true;
     }
   };
@@ -37,38 +35,56 @@ const MainPage = ({ user }) => {
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtUsername');
-    window.location.href = '/login';
+    navigate('/login');
   };
 
-  // ------------------ AUTO-LOGOUT ON TOKEN EXPIRY ------------------
+  // ------------------ AUTH CHECK AND AUTO-LOGOUT ------------------
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
-    if (token && !isTokenExpired(token)) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000;
-      const timeLeft = expiry - Date.now();
-      if (timeLeft > 0) {
-        const timeout = setTimeout(() => {
-          alert('Your session has expired. Please log in again.');
-          handleLogout();
-        }, timeLeft);
-        return () => clearTimeout(timeout);
-      } else {
-        alert('Your session has expired. Please log in again.');
-        handleLogout();
-      }
+    if (!token || isTokenExpired(token)) {
+      console.warn('No valid token found, redirecting to login');
+      alert('Please log in to continue.');
+      handleLogout();
+      return;
     }
-  }, []);
 
-  const currentUser = user
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp * 1000;
+    const timeLeft = expiry - Date.now();
+
+    if (timeLeft <= 0) {
+      alert('Your session has expired. Please log in again.');
+      handleLogout();
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      alert('Your session has expired. Please log in again.');
+      handleLogout();
+    }, timeLeft);
+
+    // Log user prop for debugging
+    console.log('MainPage user prop:', user);
+    if (user && user.id) {
+      console.log('User ID passed to Header:', user.id);
+    } else {
+      console.warn('User prop missing or incomplete:', user);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [navigate, user]);
+
+  // Construct currentUser with fallback for undefined user
+  const currentUser = user && user.id && user.username
     ? {
         id: user.id,
         name: user.username,
         handle: `@${user.username.toLowerCase()}`,
         avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        skills: ['UI/UX', 'React', 'Figma'],
+        skills: user.skills || ['UI/UX', 'React', 'Figma'],
       }
     : {
+        id: null,
         name: 'Guest User',
         handle: '@guest',
         avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
@@ -132,7 +148,7 @@ const MainPage = ({ user }) => {
 
   return (
     <div className="skillshare-social">
-      <Header onMenuClick={() => setShowNavBar(true)} />
+      <Header onMenuClick={() => setShowNavBar(true)} user={user} />
       {showNavBar && <NavBar onClose={() => setShowNavBar(false)} />}
 
       <main className="main-content">
@@ -163,9 +179,15 @@ const MainPage = ({ user }) => {
                 <Button variant="outline-primary" className="edit-profile-btn">
                   Edit Profile
                 </Button>
-                <Button variant="danger" className="mt-2" onClick={handleLogout}>
-                  Logout
-                </Button>
+                {user && user.id && (
+                  <Button
+                    variant="danger"
+                    className="mt-2"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                )}
               </Card>
 
               <Card className="trending-card">
@@ -185,15 +207,22 @@ const MainPage = ({ user }) => {
 
             {/* Main Feed */}
             <Col lg={6} className="main-feed">
-              <CreatePost user={user} currentUser={currentUser} />
-
-              {/* Removed feed-tabs section */}
-
-              <PostList
-                userId={currentUser.id}
-                user={currentUser}
-                // Removed `filter` prop if not needed anymore
-              />
+              {user && user.id ? (
+                <CreatePost user={user} currentUser={currentUser} />
+              ) : (
+                <Card className="text-center mb-3">
+                  <Card.Body>
+                    <p>Please log in to create posts.</p>
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate('/login')}
+                    >
+                      Log In
+                    </Button>
+                  </Card.Body>
+                </Card>
+              )}
+              <PostList userId={currentUser.id} user={currentUser} />
             </Col>
 
             {/* Right Sidebar */}
@@ -208,6 +237,7 @@ const MainPage = ({ user }) => {
                         variant={action.variant}
                         className="action-btn"
                         onClick={action.onClick}
+                        disabled={!user || !user.id}
                       >
                         {action.icon}
                         {action.label}
@@ -241,6 +271,7 @@ const MainPage = ({ user }) => {
                           variant="outline-primary"
                           size="sm"
                           className="follow-btn"
+                          disabled={!user || !user.id}
                         >
                           Follow
                         </Button>
@@ -251,17 +282,18 @@ const MainPage = ({ user }) => {
               </Card>
 
               <Button
-              variant="light"
-              className="community-help-btn"
-              onClick={() => navigate('/threads')}
-              aria-label="Get help from community"
-            >
-              <div className="btn-content">
-                <FaComments className="chat-icon" />
-                <span className="btn-text">Community Help</span>
-                <div className="pulse-dot"></div>
-              </div>
-            </Button>
+                variant="light"
+                className="community-help-btn"
+                onClick={() => navigate('/threads')}
+                aria-label="Get help from community"
+                disabled={!user || !user.id}
+              >
+                <div className="btn-content">
+                  <FaComments className="chat-icon" />
+                  <span className="btn-text">Community Help</span>
+                  <div className="pulse-dot"></div>
+                </div>
+              </Button>
             </Col>
           </Row>
         </Container>

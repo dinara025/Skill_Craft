@@ -2,8 +2,10 @@ package com.paf.skillcraft.skill_craft.service;
 
 import com.paf.skillcraft.skill_craft.model.Post;
 import com.paf.skillcraft.skill_craft.model.User;
+import com.paf.skillcraft.skill_craft.model.Notification;
 import com.paf.skillcraft.skill_craft.repository.PostRepository;
 import com.paf.skillcraft.skill_craft.repository.UserRepository;
+import com.paf.skillcraft.skill_craft.repository.NotificationRepository;
 import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class PostService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public Post createPost(Post post) {
         post.setCreatedAt(LocalDateTime.now());
@@ -103,9 +108,26 @@ public class PostService {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
+
             if (!post.getLikes().contains(userId)) {
                 post.addLike(userId);
-                return postRepository.save(post);
+                postRepository.save(post);
+
+                // Send notification to post owner
+                if (!post.getUserId().equals(userId)) {
+                    Notification notification = new Notification();
+                    notification.setRecipientId(post.getUserId());
+                    notification.setSenderId(userId);
+                    notification.setPostId(postId);
+                    notification.setMessage("liked your post");
+                    notification.setType("like");
+                    notification.setRead(false);
+                    notification.setTimestamp(LocalDateTime.now());
+
+                    notificationRepository.save(notification);
+                }
+
+                return post;
             }
         }
         return null;
@@ -115,6 +137,7 @@ public class PostService {
         Optional<Post> postOptional = postRepository.findById(postId);
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
+
             if (post.getLikes().contains(userId)) {
                 post.removeLike(userId);
                 return postRepository.save(post);
