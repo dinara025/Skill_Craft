@@ -52,6 +52,10 @@ public class PostService {
         return postRepository.findByUserId(userId);
     }
 
+    public long getPostCountByUserId(String userId) {
+        return postRepository.countByUserId(userId);
+    }
+
     public void deletePost(String id) {
         postRepository.deleteById(id);
     }
@@ -88,19 +92,19 @@ public class PostService {
         return posts.stream().map(post -> {
             User user = userRepository.findById(post.getUserId()).orElse(null);
 
-            PostResponseDto dto = new PostResponseDto();
-            dto.setId(post.getId());
-            dto.setUserId(post.getUserId());
-            dto.setUsername(user != null ? user.getUsername() : "Unknown");
-            dto.setContent(post.getContent());
-            dto.setMediaLinks(post.getMediaLinks());
-            dto.setTags(post.getTags());
-            dto.setTemplate(post.getTemplate());
-            dto.setCreatedAt(post.getCreatedAt());
-            dto.setLikeCount(post.getLikeCount());
-            dto.setLikes(post.getLikes());
-            dto.setIsLiked(post.getLikes().contains(currentUserId));
-            return dto;
+            PostResponseDto responseDto = new PostResponseDto();
+            responseDto.setId(post.getId());
+            responseDto.setUserId(post.getUserId());
+            responseDto.setUsername(user != null ? user.getUsername() : "Unknown");
+            responseDto.setContent(post.getContent());
+            responseDto.setMediaLinks(post.getMediaLinks());
+            responseDto.setTags(post.getTags());
+            responseDto.setTemplate(post.getTemplate());
+            responseDto.setCreatedAt(post.getCreatedAt());
+            responseDto.setLikeCount(post.getLikeCount());
+            responseDto.setLikes(post.getLikes());
+            responseDto.setIsLiked(post.getLikes().contains(currentUserId));
+            return responseDto;
         }).collect(Collectors.toList());
     }
 

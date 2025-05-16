@@ -46,6 +46,12 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/count/{userId}")
+    public ResponseEntity<Long> getPostCount(@PathVariable String userId) {
+        long count = postService.getPostCountByUserId(userId);
+        return ResponseEntity.ok(count);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable String id, @RequestBody Post post) {
         if (post.getTemplate() != null && !isValidTemplate(post.getTemplate())) {
