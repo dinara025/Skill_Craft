@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
-import { formatDistanceToNow } from 'date-fns'; // Added import
+import { formatDistanceToNow } from 'date-fns';
 import PostCard from './PostCard';
 import { getAuthHeaders } from '../services/authService';
 import { fetchCommentsByPostId } from '../services/commentService';
 import '../styles/PostList.css';
 
-const PostList = ({ userId, user }) => {
+const PostList = ({ userId, user, searchQuery }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,11 +16,10 @@ const PostList = ({ userId, user }) => {
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000; // Convert seconds to milliseconds
-      // Add a 5-second buffer to account for clock skew
-      return Date.now() >= (expiry - 5000);
+      const expiry = payload.exp * 1000;
+      return Date.now() >= expiry - 5000;
     } catch (error) {
-      return true; // Assume expired if token is invalid
+      return true;
     }
   };
 
@@ -36,14 +35,14 @@ const PostList = ({ userId, user }) => {
     const token = localStorage.getItem('jwtToken');
     if (token && !isTokenExpired(token)) {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000; // Convert to milliseconds
+      const expiry = payload.exp * 1000;
       const timeLeft = expiry - Date.now();
       if (timeLeft > 0) {
         const timeout = setTimeout(() => {
           alert('Your session has expired. Please log in again.');
           handleLogout();
         }, timeLeft);
-        return () => clearTimeout(timeout); // Cleanup on unmount
+        return () => clearTimeout(timeout);
       } else {
         alert('Your session has expired. Please log in again.');
         handleLogout();
@@ -63,8 +62,14 @@ const PostList = ({ userId, user }) => {
           return;
         }
 
+        // Determine the API endpoint based on searchQuery
+        const baseUrl = 'http://localhost:8080/api/auth';
+        const endpoint = searchQuery
+          ? `${baseUrl}/posts/search?tag=${encodeURIComponent(searchQuery)}&currentUserId=${userId}`
+          : `${baseUrl}/posts?currentUserId=${userId}`;
+
         // Fetch posts
-        const response = await fetch(`http://localhost:8080/api/auth/posts?currentUserId=${userId}`, {
+        const response = await fetch(endpoint, {
           headers: {
             ...getAuthHeaders().headers,
             'Accept': 'application/json'
@@ -144,7 +149,7 @@ const PostList = ({ userId, user }) => {
     };
 
     fetchPosts();
-  }, [userId]);
+  }, [userId, searchQuery]);
 
   // ------------------ TOGGLE DROPDOWN ------------------
   const toggleDropdown = (postId) => {
@@ -221,7 +226,7 @@ const PostList = ({ userId, user }) => {
           <Card.Body>
             <div className="text-center">
               <h5>No posts found</h5>
-              <p>Be the first to share something!</p>
+              <p>{searchQuery ? `No posts found for "${searchQuery}"` : 'Be the first to share something!'}</p>
             </div>
           </Card.Body>
         </Card>

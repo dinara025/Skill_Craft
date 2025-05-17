@@ -1,70 +1,104 @@
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 30px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    height: 100px; /* Taller header */
-  }
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-  
-  .menu-button {
-    background: none;
-    border: none;
-    font-size: 28px; /* slightly bigger */
-    margin-right: 20px;
-    cursor: pointer;
-    color: #333;
-  }
-  
-  .logo {
-    height: 130px; /* Increased logo size */
-    object-fit: contain;
-  }
-  
-  .search-form {
-    flex: none;
-    width: 350px; /* Shorter fixed width */
-    margin: 0 auto;
-    position: absolute;
-    left: 28%;
-    transform: translateX(-50%);
-  }
-  
-  .search-form input {
-    width: 100%;
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 24px;
-    font-size: 12px;
-  }
-  
-  
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-  
-  .icon {
-    font-size: 30px; /* Bigger icons */
-    cursor: pointer;
-    color: #333;
-  }
-  
-  .profile-icon {
-    font-size: 30px;
-  }
-  
-  .suggestions-list {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 30px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 100px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  margin-right: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+.logo {
+  height: 130px;
+  object-fit: contain;
+}
+
+.search-form {
+  flex: none;
+  width: 350px;
+  margin: 0 auto;
+  position: absolute;
+  left: 28%;
+  transform: translateX(-50%);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 40px; /* Adjusted padding to accommodate icons */
+  border: 1px solid #ccc;
+  border-radius: 24px;
+  font-size: 12px;
+  height: 40px; /* Fixed height for consistency */
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-icon,
+.clear-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px; /* Consistent size for both icons */
+  color: #666;
+}
+
+.search-icon {
+  left: 12px;
+}
+
+.clear-icon {
+  right: 12px;
+  cursor: pointer;
+}
+
+.clear-icon:hover {
+  color: #333;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.icon {
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+}
+
+.profile-icon {
+  font-size: 30px;
+}
+
+.suggestions-list {
   position: absolute;
   background-color: white;
   border: 1px solid #ddd;
@@ -75,7 +109,7 @@
   left: 20%;
   z-index: 10;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: 0;
   margin: 0;
   list-style: none;

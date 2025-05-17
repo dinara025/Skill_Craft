@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/posts")
@@ -96,6 +97,34 @@ public class PostController {
         Optional<Post> postOptional = postService.getPostById(id);
         return postOptional.map(post -> ResponseEntity.ok(post.getLikes()))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/search-suggestions")
+    public ResponseEntity<List<String>> getTagSuggestions(@RequestParam("query") String query) {
+        List<String> tags = postService.findMatchingTags(query);
+        return ResponseEntity.ok(tags);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PostResponseDto>> searchPostsByTag(
+            @RequestParam("tag") String tag,
+            @RequestParam("currentUserId") String currentUserId) {
+        List<Post> posts = postService.findPostsByTag(tag, currentUserId);
+        List<PostResponseDto> responseDtos = posts.stream().map(post -> {
+            PostResponseDto dto = new PostResponseDto();
+            dto.setId(post.getId());
+            dto.setContent(post.getContent());
+            dto.setMediaLinks(post.getMediaLinks());
+            dto.setTags(post.getTags());
+            dto.setTemplate(post.getTemplate());
+            dto.setCreatedAt(post.getCreatedAt());
+            dto.setUserId(post.getUserId());
+            dto.setLikeCount(post.getLikeCount());
+            dto.setLikes(post.getLikes());
+            dto.setIsLiked(post.getLikes().contains(currentUserId));
+            return dto;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(responseDtos);
     }
 
     private boolean isValidTemplate(String template) {
