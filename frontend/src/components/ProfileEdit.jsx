@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getAuthHeaders } from '../services/authService'; // Adjust path based on your project structure
+import { getAuthHeaders } from '../services/authService';
 import '../styles/ProfileEdit.css';
 
 const ProfileEdit = () => {
@@ -13,9 +13,8 @@ const ProfileEdit = () => {
   const [newSkill, setNewSkill] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [username, setUsername] = useState(''); // Assuming username is available
+  const [username, setUsername] = useState('');
 
-  // Fetch current user profile on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -25,13 +24,14 @@ const ProfileEdit = () => {
           return;
         }
 
-        // Decode JWT to get username (assumes JWT contains username in payload)
         const decoded = JSON.parse(atob(token.split('.')[1]));
-        const userUsername = decoded.sub; // Adjust based on your JWT structure
+        const userUsername = decoded.sub;
         setUsername(userUsername);
 
-        // Fetch user details
-        const response = await axios.get(`http://localhost:8080/api/auth/userDetails/${userUsername}`, getAuthHeaders());
+        const response = await axios.get(
+          `http://localhost:8080/api/auth/userDetails/${userUsername}`,
+          getAuthHeaders()
+        );
         const user = response.data;
         setFormData({
           bio: user.bio || '',
@@ -47,13 +47,11 @@ const ProfileEdit = () => {
     fetchProfile();
   }, []);
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add a new skill
   const addSkill = () => {
     if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
       setFormData((prev) => ({
@@ -64,7 +62,6 @@ const ProfileEdit = () => {
     }
   };
 
-  // Remove a skill
   const removeSkill = (skillToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -72,25 +69,27 @@ const ProfileEdit = () => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('username', username);
+      formDataToSend.append('bio', formData.bio);
+      formDataToSend.append('profilePhoto', formData.profilePhoto);
+      formDataToSend.append('education', formData.education);
+      formData.skills.forEach((skill) => formDataToSend.append('skills', skill)); // Send as multiple skills parameters
+
       const response = await axios.post(
         'http://localhost:8080/api/auth/profile',
-        null,
+        formDataToSend,
         {
-          params: {
-            username,
-            bio: formData.bio,
-            profilePhoto: formData.profilePhoto,
-            education: formData.education,
-            skills: formData.skills,
+          headers: {
+            ...getAuthHeaders().headers,
+            'Content-Type': 'multipart/form-data',
           },
-          ...getAuthHeaders(),
         }
       );
       setMessage('Profile updated successfully!');
@@ -150,11 +149,7 @@ const ProfileEdit = () => {
               className="form-input skill-input"
               placeholder="Add a skill"
             />
-            <button
-              type="button"
-              onClick={addSkill}
-              className="button button-primary"
-            >
+            <button type="button" onClick={addSkill} className="button button-primary">
               Add
             </button>
           </div>
@@ -173,10 +168,7 @@ const ProfileEdit = () => {
             ))}
           </ul>
         </div>
-        <button
-          type="submit"
-          className="button button-submit"
-        >
+        <button type="submit" className="button button-submit">
           Save Profile
         </button>
       </form>

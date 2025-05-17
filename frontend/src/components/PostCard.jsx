@@ -35,57 +35,50 @@ const PostCard = ({
   isPostOwner,
   user
 }) => {
-  // Log post details to console
   console.log('Post Details:', {
     id: post.id,
-    content: {
-      text: post.content.text,
-      mediaLinks: post.content.mediaLinks,
-      likes: post.content.likes,
-      comments: post.content.comments,
-      shares: post.content.shares,
-      isLiked: post.content.isLiked,
-      isBookmarked: post.content.isBookmarked,
-      time: post.content.time
-    },
-    user: {
-      name: post.user.name,
-      avatar: post.user.avatar,
-      verified: post.user.verified
-    },
-    tags: post.tags
+    title: post.title,
+    content: post.content,
+    mediaLinks: post.mediaLinks,
+    likes: post.likes,
+    likeCount: post.likeCount,
+    isLiked: post.isLiked,
+    username: post.username,
+    avatar: post.avatar,
+    tags: post.tags,
+    createdAt: post.createdAt,
+    comments: post.comments
   });
 
-  // Function to check if media is a video
   const isVideo = (url) => {
     if (!url || typeof url !== 'string') {
-      return false; // Return false if url is undefined, null, or not a string
+      return false;
     }
-  // Remove query parameters
-  const cleanUrl = url.split('?')[0];
-  // Check for video extensions
-  return cleanUrl.match(/\.(mp4|webm|ogg)$/i);
- };
+    const cleanUrl = url.split('?')[0];
+    return cleanUrl.match(/\.(mp4|webm|ogg)$/i);
+  };
 
-  // Separate videos and images
-  const videos = post.content.mediaLinks ? post.content.mediaLinks.filter(isVideo) : [];
-  const images = post.content.mediaLinks ? post.content.mediaLinks.filter(url => !isVideo(url)) : [];
-  const allMedia = post.content.mediaLinks || []; // Unified topic for modal
+  const videos = post.mediaLinks ? post.mediaLinks.filter(isVideo) : [];
+  const images = post.mediaLinks ? post.mediaLinks.filter(url => !isVideo(url)) : [];
+  const allMedia = post.mediaLinks || [];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [modalMediaIndex, setModalMediaIndex] = useState(0);
-  const [comments, setComments] = useState(post.content.commentsList || []);
+  const [comments, setComments] = useState(post.commentsList || []);
   const [playingVideos, setPlayingVideos] = useState({});
   const videoRefs = useRef({});
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // Function to remove hashtags from the description
   const removeHashtags = (text, tags) => {
-    let cleanedText = text;
+    let cleanedText = text || '';
+    if (typeof cleanedText !== 'string') {
+      console.warn('Content is not a string:', cleanedText);
+      return '';
+    }
     if (tags && tags.length > 0) {
       tags.forEach(tag => {
         const hashtag = `#${tag}`;
@@ -98,11 +91,10 @@ const PostCard = ({
 
   const handleLikeToggle = async () => {
     try {
-      const endpoint = post.content.isLiked
-        ? `/api/posts/${post.id}/unlike/${userId}`
-        : `/api/posts/${post.id}/like/${userId}`;
-
-      const response = await axios.put(`http://localhost:8080/api/auth/posts/${post.id}/like/${userId}`);
+      const endpoint = post.isLiked
+        ? `/api/auth/posts/${post.id}/unlike/${userId}`
+        : `/api/auth/posts/${post.id}/like/${userId}`;
+      const response = await axios.post(`http://localhost:8080${endpoint}`);
       const updatedPost = response.data;
 
       setPosts(prevPosts =>
@@ -110,11 +102,9 @@ const PostCard = ({
           p.id === post.id
             ? {
                 ...p,
-                content: {
-                  ...p.content,
-                  isLiked: updatedPost.likedUsers?.includes(userId) ?? false,
-                  likes: updatedPost.likedUsers?.length ?? 0
-                }
+                isLiked: updatedPost.likes.includes(userId),
+                likeCount: updatedPost.likeCount,
+                likes: updatedPost.likes
               }
             : p
         )
@@ -128,13 +118,7 @@ const PostCard = ({
     setPosts(prevPosts =>
       prevPosts.map(p =>
         p.id === post.id
-          ? {
-              ...p,
-              content: {
-                ...p.content,
-                isBookmarked: !p.content.isBookmarked
-              }
-            }
+          ? { ...p, isBookmarked: !p.isBookmarked }
           : p
       )
     );
@@ -198,10 +182,9 @@ const PostCard = ({
   };
 
   const openMediaModal = (index, isVideoType = false) => {
-    // Map video/image index to allMedia index
     const mediaIndex = isVideoType
-      ? post.content.mediaLinks.indexOf(videos[index])
-      : post.content.mediaLinks.indexOf(images[index]);
+      ? post.mediaLinks.indexOf(videos[index])
+      : post.mediaLinks.indexOf(images[index]);
     setModalMediaIndex(mediaIndex);
     setShowMediaModal(true);
   };
@@ -216,7 +199,7 @@ const PostCard = ({
   const toggleVideoPlay = (index, isModal = false) => {
     const videoKey = isModal ? `modal-${index}` : index;
     const videoRef = videoRefs.current[videoKey];
-    
+
     if (videoRef) {
       if (playingVideos[videoKey]) {
         videoRef.pause();
@@ -224,7 +207,7 @@ const PostCard = ({
         videoRef.play();
       }
     }
-    
+
     setPlayingVideos(prev => ({
       ...prev,
       [videoKey]: !prev[videoKey]
@@ -271,14 +254,7 @@ const PostCard = ({
     setPosts(prevPosts =>
       prevPosts.map(p =>
         p.id === post.id
-          ? {
-              ...p,
-              content: {
-                ...p.content,
-                comments: (p.content.comments || 0) + 1,
-                commentsList: [...(p.content.commentsList || []), newComment]
-              }
-            }
+          ? { ...p, comments: (p.comments || 0) + 1, commentsList: [...(p.commentsList || []), newComment] }
           : p
       )
     );
@@ -289,14 +265,7 @@ const PostCard = ({
     setPosts(prevPosts =>
       prevPosts.map(p =>
         p.id === post.id
-          ? {
-              ...p,
-              content: {
-                ...p.content,
-                comments: fetchedComments.length,
-                commentsList: fetchedComments
-              }
-            }
+          ? { ...p, comments: fetchedComments.length, commentsList: fetchedComments }
           : p
       )
     );
@@ -304,8 +273,8 @@ const PostCard = ({
 
   let timeAgo = 'Just now';
   try {
-    if (post?.content?.time) {
-      const parsedTime = new Date(post.content.time);
+    if (post?.createdAt) {
+      const parsedTime = new Date(post.createdAt);
       if (!isNaN(parsedTime)) {
         const daysDiff = differenceInDays(new Date(), parsedTime);
         timeAgo = daysDiff < 7
@@ -314,13 +283,11 @@ const PostCard = ({
       }
     }
   } catch (error) {
-    console.error('Invalid date format:', post.content.time);
+    console.error('Invalid date format:', post.createdAt);
   }
 
-  // Get the cleaned text without hashtags
-  const cleanedText = removeHashtags(post.content.text, post.tags);
+  const cleanedText = removeHashtags(post.content, post.tags);
 
-  // Render media item (image or video)
   const renderMediaItem = (mediaUrl, index, isModal = false) => {
     if (isVideo(mediaUrl)) {
       return (
@@ -371,14 +338,14 @@ const PostCard = ({
       <Card.Header className="post-header">
         <div className="user-info">
           <img
-            src={post.user.avatar}
-            alt={post.user.name}
+            src={post.avatar || 'https://via.placeholder.com/48'}
+            alt={post.username}
             className="user-avatar"
           />
           <div className="user-details">
             <h6 className="user-name">
-              {post.user.name}
-              {post.user.verified && <span className="verified-badge">✓</span>}
+              {post.username}
+              {user?.verified && <span className="verified-badge">✓</span>}
             </h6>
             <p className="user-handle">{timeAgo}</p>
           </div>
@@ -412,8 +379,8 @@ const PostCard = ({
       </Card.Header>
 
       <Card.Body className="post-body">
+        {post.title && <Card.Title className="post-title">{post.title}</Card.Title>}
         <Card.Text className="post-text">{cleanedText}</Card.Text>
-        {/* Video Container */}
         {videos.length > 0 && (
           <div className="post-media-wrapper">
             <div
@@ -460,7 +427,6 @@ const PostCard = ({
             )}
           </div>
         )}
-        {/* Image Container */}
         {images.length > 0 && (
           <div className="post-media-wrapper">
             <div
@@ -520,12 +486,12 @@ const PostCard = ({
         <div className="engagement-actions">
           <Button
             variant="link"
-            className={`action-btn like-btn ${post.content.isLiked ? 'liked' : ''}`}
+            className={`action-btn like-btn ${post.isLiked ? 'liked' : ''}`}
             onClick={handleLikeToggle}
-            aria-label={post.content.isLiked ? 'Unlike post' : 'Like post'}
+            aria-label={post.isLiked ? 'Unlike post' : 'Like post'}
           >
-            {post.content.isLiked ? <FaHeart /> : <FaRegHeart />}
-            <span className="action-count">{post.content.likes}</span>
+            {post.isLiked ? <FaHeart className="like-icon" /> : <FaRegHeart className="like-icon" />}
+            <span className="action-count">{post.likeCount}</span>
           </Button>
           <Button
             variant="link"
@@ -534,20 +500,20 @@ const PostCard = ({
             aria-label="Comment on post"
           >
             <FaComment />
-            <span className="action-count">{comments.length}</span>
+            <span className="action-count">{post.comments || 0}</span>
           </Button>
           <Button variant="link" className="action-btn share-btn" aria-label="Share post">
             <FaShare />
-            <span className="action-count">{post.content.shares}</span>
+            <span className="action-count">0</span>
           </Button>
         </div>
         <Button
           variant="link"
-          className={`action-btn bookmark-btn ${post.content.isBookmarked ? 'bookmarked' : ''}`}
+          className={`action-btn bookmark-btn ${post.isBookmarked ? 'bookmarked' : ''}`}
           onClick={handleBookmarkToggle}
-          aria-label={post.content.isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+          aria-label={post.isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
         >
-          {post.content.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+          {post.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
         </Button>
       </Card.Footer>
 

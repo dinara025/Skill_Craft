@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
+import { formatDistanceToNow } from 'date-fns';
 import PostCard from './PostCard';
 import { getAuthHeaders } from '../services/authService';
+import { fetchCommentsByPostId } from '../services/commentService';
 import '../styles/PostList.css';
 
-const PostList = ({ userId, user }) => {
+const PostList = ({ userId, user, searchQuery }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDropdown, setShowDropdown] = useState(null);
 
-  const samplePosts = []; // Assuming samplePosts is empty or defined elsewhere
-
   // ------------------ TOKEN EXPIRATION CHECK ------------------
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000; // Convert seconds to milliseconds
-      // Add a 5-second buffer to account for clock skew
-      return Date.now() >= (expiry - 5000);
+      const expiry = payload.exp * 1000;
+      return Date.now() >= expiry - 5000;
     } catch (error) {
-      return true; // Assume expired if token is invalid
+      return true;
     }
   };
 
@@ -36,15 +35,14 @@ const PostList = ({ userId, user }) => {
     const token = localStorage.getItem('jwtToken');
     if (token && !isTokenExpired(token)) {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000; // Convert to milliseconds
+      const expiry = payload.exp * 1000;
       const timeLeft = expiry - Date.now();
       if (timeLeft > 0) {
         const timeout = setTimeout(() => {
-          // Consider using react-toastify for better UX
           alert('Your session has expired. Please log in again.');
           handleLogout();
         }, timeLeft);
-        return () => clearTimeout(timeout); // Cleanup on unmount
+        return () => clearTimeout(timeout);
       } else {
         alert('Your session has expired. Please log in again.');
         handleLogout();
@@ -52,6 +50,7 @@ const PostList = ({ userId, user }) => {
     }
   }, []);
 
+  // ------------------ FETCH POSTS AND COMMENTS ------------------
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -63,7 +62,14 @@ const PostList = ({ userId, user }) => {
           return;
         }
 
-        const response = await fetch('http://localhost:8080/api/auth/posts', {
+        // Determine the API endpoint based on searchQuery
+        const baseUrl = 'http://localhost:8080/api/auth';
+        const endpoint = searchQuery
+          ? `${baseUrl}/posts/search?tag=${encodeURIComponent(searchQuery)}&currentUserId=${userId}`
+          : `${baseUrl}/posts?currentUserId=${userId}`;
+
+        // Fetch posts
+        const response = await fetch(endpoint, {
           headers: {
             ...getAuthHeaders().headers,
             'Accept': 'application/json'
@@ -91,40 +97,51 @@ const PostList = ({ userId, user }) => {
         }
 
         if (Array.isArray(data) && data.length > 0) {
-          const transformedPosts = data.map(post => ({
-            id: post.id || Math.random().toString(36).substr(2, 9),
-            createdAt: post.createdAt || new Date().toISOString(),
-            user: {
-              name: post.username || 'Unknown User',
-              handle: `@${(post.userId || 'user').toLowerCase()}`,
-              avatar: "https://randomuser.me/api/portraits/lego/1.jpg",
-              verified: false
-            },
-            content: {
-              text: post.content || '',
+          // Transform posts to match PostCard.jsx expectations
+          const transformedPosts = await Promise.all(data.map(async post => {
+            let commentsList = [];
+            let commentCount = 0;
+            try {
+              const commentResponse = await fetchCommentsByPostId(post.id);
+              commentsList = commentResponse.data.map(comment => ({
+                id: comment.id,
+                user: { id: comment.userId, name: comment.username || `User_${comment.userId}` },
+                text: comment.content,
+                timeAgo: formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
+              }));
+              commentCount = commentsList.length;
+            } catch (commentError) {
+              console.error(`Error fetching comments for post ${post.id}:`, commentError);
+            }
+
+            return {
+              id: post.id || Math.random().toString(36).substr(2, 9),
+              title: post.title || '',
+              content: post.content || '',
               mediaLinks: post.mediaLinks || [],
-              likes: post.likes || 0,
-              comments: post.comments || 0,
-              shares: post.shares || 0,
-              isLiked: false,
+              tags: post.tags || [],
+              template: post.template || 'general',
+              createdAt: post.createdAt || new Date().toISOString(),
+              userId: String(post.userId || 'unknown'),
+              username: post.username || 'Unknown User',
+              avatar: post.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg',
+              likeCount: post.likeCount || 0,
+              likes: post.likes || [],
+              isLiked: post.isLiked || false,
               isBookmarked: false,
-              time: post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Recently',
-              timestamp: post.createdAt ? new Date(post.createdAt) : new Date()
-            },
-            tags: post.tags || [],
-            userId: String(post.userId || 'unknown')
+              comments: commentCount,
+              commentsList
+            };
           }));
 
+          // Sort by createdAt in descending order
           transformedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setPosts(transformedPosts);
         } else {
-          const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          setPosts(sortedSamplePosts);
+          setPosts([]);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        const sortedSamplePosts = [...samplePosts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setPosts(sortedSamplePosts);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -132,12 +149,14 @@ const PostList = ({ userId, user }) => {
     };
 
     fetchPosts();
-  }, [userId]);
+  }, [userId, searchQuery]);
 
+  // ------------------ TOGGLE DROPDOWN ------------------
   const toggleDropdown = (postId) => {
     setShowDropdown(prev => (prev === postId ? null : postId));
   };
 
+  // ------------------ DELETE POST ------------------
   const handleDeletePost = async (postId) => {
     const post = posts.find(p => p.id === postId);
     if (!post) {
@@ -183,6 +202,7 @@ const PostList = ({ userId, user }) => {
     }
   };
 
+  // ------------------ RENDER ------------------
   return (
     <div className="post-list-container">
       {loading ? (
@@ -206,7 +226,7 @@ const PostList = ({ userId, user }) => {
           <Card.Body>
             <div className="text-center">
               <h5>No posts found</h5>
-              <p>Be the first to share something!</p>
+              <p>{searchQuery ? `No posts found for "${searchQuery}"` : 'Be the first to share something!'}</p>
             </div>
           </Card.Body>
         </Card>

@@ -430,3 +430,35 @@
       margin-bottom: 12px;
     }
   }
+
+  .profile-details {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.profile-detail-item i {
+  color: #007bff;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background-color: #e9ecef;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}

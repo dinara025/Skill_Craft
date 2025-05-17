@@ -7,25 +7,41 @@ import {
 } from "../services/followService";
 import "../styles/UserProfile.css";
 
+// Configure Axios base URL (adjust as needed for your backend)
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
 const UserProfile = ({ user }) => {
   const [posts, setPosts] = useState([]);
+  const [postCount, setPostCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("posts");
-
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPostsAndCount = async () => {
       try {
-        if (user?.id) {
-          const response = await axios.get(`/api/auth/posts/user/${user.id}`);
-          setPosts(response.data);
+        if (!user?.id) {
+          throw new Error("User ID is not available");
         }
+
+        // Fetch posts
+        const postsResponse = await axios.get(`/api/auth/posts/user/${user.id}`);
+        setPosts(postsResponse.data);
+
+        // Fetch post count
+        const countResponse = await axios.get(`/api/auth/posts/count/${user.id}`);
+        setPostCount(countResponse.data);
       } catch (err) {
-        console.error("Error fetching user posts:", err);
+        console.error("Error fetching user data:", err);
+        setError(
+          err.response?.status === 404
+            ? "User posts not found. Please try again later."
+            : "An error occurred while fetching posts."
+        );
       } finally {
         setLoading(false);
       }
@@ -46,8 +62,11 @@ const UserProfile = ({ user }) => {
     };
 
     if (user) {
-      fetchPosts();
+      fetchPostsAndCount();
       fetchCounts();
+    } else {
+      setError("User not found");
+      setLoading(false);
     }
   }, [user]);
 
@@ -55,14 +74,17 @@ const UserProfile = ({ user }) => {
     navigate("/profile/edit");
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="loading-spinner">
         <div className="spinner"></div>
       </div>
     );
+  }
 
-  if (!user) return <div className="error-message">User not found</div>;
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="profile-container">
@@ -70,7 +92,7 @@ const UserProfile = ({ user }) => {
         <div className="profile-cover">
           <div className="profile-avatar-container">
             <img
-              src={user.profilePicture || "/default-profile.png"}
+              src={user.profilePhoto || "/default-profile.png"}
               alt="Profile"
               className="profile-avatar"
             />
@@ -83,12 +105,30 @@ const UserProfile = ({ user }) => {
         <div className="profile-info">
           <h1 className="profile-name">{user.username}</h1>
           <p className="profile-bio">{user.bio || "No bio yet"}</p>
+          <div className="profile-details">
+            {user.education && (
+              <div className="profile-detail-item">
+                <i className="fas fa-graduation-cap"></i>
+                <span>{user.education}</span>
+              </div>
+            )}
+            {user.skills?.length > 0 && (
+              <div className="profile-detail-item">
+                <i className="fas fa-tools"></i>
+                <div className="skills-list">
+                  {user.skills.map((skill, idx) => (
+                    <span key={idx} className="skill-tag">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="profile-stats">
             <div className="stat-item">
-              <span className="stat-number">
-                {user.postsCount || posts.length}
-              </span>
+              <span className="stat-number">{postCount}</span>
               <span className="stat-label">Posts</span>
             </div>
             <div className="stat-item">
@@ -132,24 +172,23 @@ const UserProfile = ({ user }) => {
             {posts.length > 0 ? (
               posts.map((post) => (
                 <div key={post.id} className="post-card">
-                  {post.image && (
+                  {post.mediaLinks?.[0] && (
                     <img
-                      src={post.image}
-                      alt={post.title}
+                      src={post.mediaLinks[0]}
+                      alt="Post media"
                       className="post-image"
                     />
                   )}
                   <div className="post-content">
-                    <h3 className="post-title">{post.title}</h3>
                     <p className="post-excerpt">
-                      {post.content.substring(0, 100)}...
+                      {post.content?.substring(0, 100) || "No content"}...
                     </p>
                     <div className="post-meta">
                       <span className="post-date">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </span>
                       <span className="post-likes">
-                        <i className="fas fa-heart"></i> {post.likes || 0}
+                        <i className="fas fa-heart"></i> {post.likeCount || 0}
                       </span>
                     </div>
                   </div>

@@ -17,6 +17,8 @@ import AdminLoginPage from "./components/AdminLoginPage";
 import ThreadsPage from "./components/ThreadsPage";
 import ProfileEdit from "./components/ProfileEdit"; // Added ProfileEdit import
 import OAuth2RedirectHandler from "./components/OAuth2RedirectHandler";
+import NotificationThread from "./components/NotificationThread";
+import { requestNotificationPermission } from "./config/firebaseMessaging";
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -125,6 +127,10 @@ function App() {
               <Route
                 path="/profile"
                 element={<UserProfile user={loggedInUser} />}
+              />
+              <Route
+                path="/notifications"
+                element={<NotificationThread userId={loggedInUser.id} />}
               />
               <Route path="/profile/edit" element={<ProfileEdit />} />{" "}
               {/* Added route for ProfileEdit */}
