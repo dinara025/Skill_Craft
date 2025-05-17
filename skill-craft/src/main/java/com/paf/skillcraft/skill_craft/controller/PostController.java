@@ -2,6 +2,8 @@ package com.paf.skillcraft.skill_craft.controller;
 
 import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
 import com.paf.skillcraft.skill_craft.model.Post;
+import com.paf.skillcraft.skill_craft.model.User;
+import com.paf.skillcraft.skill_craft.repository.UserRepository;
 import com.paf.skillcraft.skill_craft.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -111,6 +113,8 @@ public class PostController {
             @RequestParam("currentUserId") String currentUserId) {
         List<Post> posts = postService.findPostsByTag(tag, currentUserId);
         List<PostResponseDto> responseDtos = posts.stream().map(post -> {
+            Optional<User> userOptional = postService.getUserRepository().findById(post.getUserId());
+            User user = userOptional.orElse(null);
             PostResponseDto dto = new PostResponseDto();
             dto.setId(post.getId());
             dto.setContent(post.getContent());
@@ -119,6 +123,8 @@ public class PostController {
             dto.setTemplate(post.getTemplate());
             dto.setCreatedAt(post.getCreatedAt());
             dto.setUserId(post.getUserId());
+            dto.setUsername(user != null ? user.getUsername() : "Unknown");
+            dto.setAvatar(user != null ? user.getProfilePhoto() : null);
             dto.setLikeCount(post.getLikeCount());
             dto.setLikes(post.getLikes());
             dto.setIsLiked(post.getLikes().contains(currentUserId));

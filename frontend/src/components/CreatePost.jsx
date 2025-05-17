@@ -20,7 +20,6 @@ const CreatePost = ({ user, currentUser }) => {
   const MAX_MEDIA = 3;
   const MAX_VIDEO_DURATION = 30;
 
-  // Predefined post templates with default media URLs
   const postTemplates = [
     {
       id: 'learning-progress',
@@ -45,7 +44,6 @@ const CreatePost = ({ user, currentUser }) => {
     },
   ];
 
-  // ------------------ TOKEN EXPIRATION CHECK ------------------
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -56,14 +54,12 @@ const CreatePost = ({ user, currentUser }) => {
     }
   };
 
-  // ------------------ LOGOUT ------------------
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtUsername');
     window.location.href = '/login';
   };
 
-  // ------------------ HANDLE FILE CHANGE ------------------
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     setErrorMessage('');
@@ -126,7 +122,6 @@ const CreatePost = ({ user, currentUser }) => {
     e.target.value = null;
   };
 
-  // ------------------ GET VIDEO DURATION ------------------
   const getVideoDuration = (file) => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
@@ -139,7 +134,6 @@ const CreatePost = ({ user, currentUser }) => {
     });
   };
 
-  // ------------------ REMOVE MEDIA ------------------
   const removeMedia = (index) => {
     const newFiles = [...mediaFiles];
     const newUrls = [...previewUrls];
@@ -153,7 +147,6 @@ const CreatePost = ({ user, currentUser }) => {
     setErrorMessage('');
   };
 
-  // ------------------ UPLOAD MEDIA TO FIREBASE ------------------
   const uploadMediaToFirebase = async () => {
     const uploadTasks = mediaFiles.map(async (item) => {
       if (typeof item === 'string') {
@@ -166,7 +159,6 @@ const CreatePost = ({ user, currentUser }) => {
     return await Promise.all(uploadTasks);
   };
 
-  // ------------------ HANDLE SUBMIT ------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -222,7 +214,6 @@ const CreatePost = ({ user, currentUser }) => {
     }
   };
 
-  // ------------------ HANDLE DESCRIPTION CHANGE ------------------
   const handleDescriptionChange = (e) => {
     const text = e.target.value;
     if (text.length <= MAX_CHARS) {
@@ -231,12 +222,10 @@ const CreatePost = ({ user, currentUser }) => {
     }
   };
 
-  // ------------------ TRIGGER FILE INPUT ------------------
   const triggerFileInput = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  // ------------------ HANDLE TEMPLATE SELECTION ------------------
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template.id);
     setDescription(template.defaultText);
@@ -249,7 +238,6 @@ const CreatePost = ({ user, currentUser }) => {
     }
   };
 
-  // Set default template on mount
   useEffect(() => {
     const defaultTemplate = postTemplates.find((t) => t.id === 'general');
     setSelectedTemplate(defaultTemplate.id);
@@ -261,7 +249,6 @@ const CreatePost = ({ user, currentUser }) => {
     }
   }, []);
 
-  // Cleanup preview URLs on unmount
   useEffect(() => {
     return () => {
       previewUrls.forEach((url) => {
