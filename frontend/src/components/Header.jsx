@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars, FaBell, FaUserCircle } from 'react-icons/fa';
+import { FaBars, FaBell, FaUserCircle, FaSearch, FaTimes } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NotificationThread from './NotificationThread';
 import { onMessageListener } from '../config/firebaseMessaging';
 import '../styles/Header.css';
 
-function Header({ onMenuClick, user }) {
+function Header({ onMenuClick, user, onSearch, onClearSearch }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -18,16 +18,24 @@ function Header({ onMenuClick, user }) {
     const fetchSuggestions = async () => {
       if (searchTerm.trim() === '') {
         setSuggestions([]);
+        setShowSuggestions(false);
         return;
       }
 
       try {
-        const res = await axios.get(`http://localhost:8080/api/search?query=${searchTerm}`);
-        setSuggestions(res.data);
+        const token = localStorage.getItem('jwtToken');
+        const response = await axios.get(`http://localhost:8080/api/auth/posts/search-suggestions?query=${encodeURIComponent(searchTerm)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        setSuggestions(response.data.map(tag => ({ type: 'tag', value: tag })));
         setShowSuggestions(true);
       } catch (err) {
-        console.error('Error fetching search suggestions:', err);
+        console.error('Error fetching hashtag suggestions:', err);
         setSuggestions([]);
+        setShowSuggestions(false);
       }
     };
 
@@ -75,18 +83,24 @@ function Header({ onMenuClick, user }) {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim() !== '') {
-      navigate(`/search?query=${searchTerm}`);
+      onSearch(searchTerm);
       setShowSuggestions(false);
+      navigate('/');
     }
   };
 
   const handleSuggestionClick = (item) => {
+    setSearchTerm(item.value);
+    onSearch(item.value);
     setShowSuggestions(false);
-    if (item.type === 'user') {
-      navigate(`/profile/${item.id}`);
-    } else if (item.type === 'post') {
-      navigate(`/post/${item.id}`);
-    }
+    navigate('/');
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    onClearSearch();
   };
 
   const toggleNotifications = () => {
@@ -98,7 +112,6 @@ function Header({ onMenuClick, user }) {
     setShowNotifications(!showNotifications);
   };
 
-  // Log if user is missing for debugging
   useEffect(() => {
     if (!user) {
       console.warn('Header: user prop is undefined. Check parent component.');
@@ -125,23 +138,33 @@ function Header({ onMenuClick, user }) {
       </div>
 
       <form className="search-form" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search SkillCraft..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-        />
+        <div className="search-container">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            className="search-input"
+          />
+          {searchTerm && (
+            <FaTimes
+              className="clear-icon"
+              onClick={handleClearSearch}
+            />
+          )}
+        </div>
         {showSuggestions && suggestions.length > 0 && (
           <ul className="suggestions-list">
-            {suggestions.map((item) => (
+            {suggestions.map((item, index) => (
               <li
-                key={item.id}
+                key={index}
                 onClick={() => handleSuggestionClick(item)}
                 className="suggestion-item"
               >
-                {item.type === 'user' ? `👤 ${item.username}` : `#️⃣ ${item.tag || item.title}`}
+                #️⃣ {item.value}
               </li>
             ))}
           </ul>

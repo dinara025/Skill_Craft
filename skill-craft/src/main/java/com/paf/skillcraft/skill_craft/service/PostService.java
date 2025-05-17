@@ -192,4 +192,18 @@ public class PostService {
         post.removeLike(userId);
         return postRepository.save(post);
     }
+
+    public List<Post> findPostsByTag(String tag, String currentUserId) {
+        return postRepository.findByTagsContainingIgnoreCase(tag);
+    }
+
+    public List<String> findMatchingTags(String query) {
+        // Fetch all posts and extract unique tags that match the query
+        List<Post> posts = postRepository.findAll();
+        return posts.stream()
+                .flatMap(post -> post.getTags().stream())
+                .filter(tag -> tag.toLowerCase().contains(query.toLowerCase()))
+                .distinct()
+                .collect(Collectors.toList());
+    }
 }

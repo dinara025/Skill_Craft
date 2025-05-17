@@ -17,12 +17,13 @@ import '../styles/MainPage.css';
 const MainPage = ({ user }) => {
   const navigate = useNavigate();
   const [showNavBar, setShowNavBar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
   // ------------------ TOKEN EXPIRATION CHECK ------------------
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Token payload:', payload); // Debug token
+      console.log('Token payload:', payload);
       const expiry = payload.exp * 1000;
       return Date.now() >= expiry - 5000;
     } catch (error) {
@@ -63,7 +64,6 @@ const MainPage = ({ user }) => {
       handleLogout();
     }, timeLeft);
 
-    // Log user prop for debugging
     console.log('MainPage user prop:', user);
     if (user && user.id) {
       console.log('User ID passed to Header:', user.id);
@@ -146,9 +146,24 @@ const MainPage = ({ user }) => {
     },
   ];
 
+  // Handle search query change
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
     <div className="skillshare-social">
-      <Header onMenuClick={() => setShowNavBar(true)} user={user} />
+      <Header
+        onMenuClick={() => setShowNavBar(true)}
+        user={user}
+        onSearch={handleSearch}
+        onClearSearch={handleClearSearch}
+      />
       {showNavBar && <NavBar onClose={() => setShowNavBar(false)} />}
 
       <main className="main-content">
@@ -222,7 +237,11 @@ const MainPage = ({ user }) => {
                   </Card.Body>
                 </Card>
               )}
-              <PostList userId={currentUser.id} user={currentUser} />
+              <PostList
+                userId={currentUser.id}
+                user={currentUser}
+                searchQuery={searchQuery}
+              />
             </Col>
 
             {/* Right Sidebar */}
