@@ -1,6 +1,7 @@
 package com.paf.skillcraft.skill_craft.controller;
 
 import com.paf.skillcraft.skill_craft.model.LearningJourney;
+import com.paf.skillcraft.skill_craft.model.LearningJourney.LearningEntry;
 import com.paf.skillcraft.skill_craft.service.LearningJourneyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,8 +19,14 @@ public class LearningJourneyController {
 
     @PostMapping
     public LearningJourney createLearningJourney(@RequestBody LearningJourney learningJourney, Authentication authentication) {
-        String userId = authentication.getName(); // Assuming JWT stores userId as the principal
+        String userId = authentication.getName();
         return learningJourneyService.createLearningJourney(learningJourney, userId);
+    }
+
+    @PostMapping("/entry")
+    public LearningJourney addLearningEntry(@RequestBody LearningEntry entry, Authentication authentication) {
+        String userId = authentication.getName();
+        return learningJourneyService.addLearningEntry(userId, entry);
     }
 
     @GetMapping("/user/{userId}")
@@ -27,19 +34,19 @@ public class LearningJourneyController {
         return learningJourneyService.getLearningJourneyByUserId(userId);
     }
 
-    @PutMapping("/{entryId}")
-    public LearningJourney updateLearningJourney(@PathVariable String entryId,
-                                                @RequestBody LearningJourney updatedEntry,
-                                                Authentication authentication) {
+    @PutMapping("/entry/{entryTitle}")
+    public LearningJourney updateLearningEntry(@PathVariable String entryTitle,
+                                              @RequestBody LearningEntry updatedEntry,
+                                              Authentication authentication) {
         String userId = authentication.getName();
-        return learningJourneyService.updateLearningJourney(entryId, userId, updatedEntry)
+        return learningJourneyService.updateLearningEntry(userId, entryTitle, updatedEntry)
                 .orElseThrow(() -> new RuntimeException("Unauthorized or learning journey entry not found"));
     }
 
-    @DeleteMapping("/{entryId}")
-    public String deleteLearningJourney(@PathVariable String entryId, Authentication authentication) {
+    @DeleteMapping("/entry/{entryTitle}")
+    public String deleteLearningEntry(@PathVariable String entryTitle, Authentication authentication) {
         String userId = authentication.getName();
-        boolean deleted = learningJourneyService.deleteLearningJourney(entryId, userId);
+        boolean deleted = learningJourneyService.deleteLearningEntry(userId, entryTitle);
         if (deleted) {
             return "Learning journey entry deleted successfully";
         } else {

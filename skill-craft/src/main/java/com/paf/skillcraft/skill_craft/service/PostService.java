@@ -1,11 +1,13 @@
 package com.paf.skillcraft.skill_craft.service;
 
-import com.paf.skillcraft.skill_craft.model.LearningJourney;
+import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
+import com.paf.skillcraft.skill_craft.model.LearningJourney.LearningEntry;
 import com.paf.skillcraft.skill_craft.model.Post;
 import com.paf.skillcraft.skill_craft.model.User;
 import com.paf.skillcraft.skill_craft.repository.PostRepository;
 import com.paf.skillcraft.skill_craft.repository.UserRepository;
-import com.paf.skillcraft.skill_craft.dto.PostResponseDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +15,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.Set;
-import java.util.HashSet;
 
 @Service
 public class PostService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     @Autowired
     private PostRepository postRepository;
@@ -29,36 +31,44 @@ public class PostService {
     private LearningJourneyService learningJourneyService;
 
     public Post createPost(Post post) {
+        logger.info("Creating post with template: {}", post.getTemplate());
         post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
         post.setLikeCount(0);
         Post savedPost = postRepository.save(post);
 
-        // Update or create learning journey if the post uses the "learning-progress" template
-        if ("learning-progress".equals(post.getTemplate())) {
-            List<LearningJourney> existingJourneys = learningJourneyService.getLearningJourneyByUserId(post.getUserId());
-            LearningJourney learningJourney;
-
-            if (existingJourneys.isEmpty()) {
-                // Create a new learning journey
-                learningJourney = new LearningJourney();
-                learningJourney.setUserId(post.getUserId());
-                learningJourney.setTitle("My Skill Journey");
-                learningJourney.setType("skill");
-                learningJourney.setDate(LocalDateTime.of(2025, 5, 17, 13, 21)); // Today's date: May 17, 2025, 01:21 PM
-                learningJourney.setDescription(post.getContent());
-                learningJourneyService.createLearningJourney(learningJourney, post.getUserId());
-            } else {
-                // Update the existing learning journey (use the first one since only one is allowed)
-                learningJourney = existingJourneys.get(0);
-                learningJourney.setDescription(post.getContent());
-                learningJourney.setDate(LocalDateTime.of(2025, 5, 17, 13, 21)); // Today's date: May 17, 2025, 01:21 PM
-                learningJourney.setUpdatedAt(LocalDateTime.now());
-                learningJourneyService.updateLearningJourney(learningJourney.getId(), post.getUserId(), learningJourney);
+        // If the post is of type "learning-progress", add a learning journey entry
+        if ("learning-progress".equalsIgnoreCase(post.getTemplate())) {
+            String skillOrCourse = extractSkillOrCourse(post.getContent());
+            logger.info("Adding learning journey entry for userId: {}, skill: {}", post.getUserId(), skillOrCourse);
+            LearningEntry entry = new LearningEntry(
+                skillOrCourse,
+                "skill", // Default to skill; could be enhanced to determine type
+                LocalDateTime.now(),
+                post.getContent()
+            );
+            try {
+                learningJourneyService.addLearningEntry(post.getUserId(), entry);
+                logger.info("Successfully added learning journey entry for userId: {}", post.getUserId());
+            } catch (Exception e) {
+                logger.error("Failed to add learning journey entry for userId: {}", post.getUserId(), e);
             }
+        } else {
+            logger.debug("Post template is not 'learning-progress', skipping learning journey update");
         }
 
         return savedPost;
+    }
+
+    private String extractSkillOrCourse(String content) {
+        // Simple extraction logic: assume the skill/course is mentioned in the content
+        // This could be improved with more sophisticated parsing
+        String[] words = content.split(" ");
+        for (String word : words) {
+            if (word.startsWith("#")) {
+                return word.substring(1); // Remove the hashtag
+            }
+        }
+        return content.length() > 50 ? content.substring(0, 50) : content; // Fallback to content snippet
     }
 
     public Optional<Post> getPostById(String id) {
@@ -69,73 +79,8 @@ public class PostService {
         return postRepository.findByUserId(userId);
     }
 
-    public long getPostCountByUserId(String userId) {
-        return postRepository.countByUserId(userId);
-    }
-
-    public Post updatePost(String id, Post updatedPost) {
-        Optional<Post> optionalPost = postRepository.findById(id);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            if (updatedPost.getContent() != null) {
-                post.setContent(updatedPost.getContent());
-            }
-            if (updatedPost.getMediaLinks() != null) {
-                post.setMediaLinks(updatedPost.getMediaLinks());
-            }
-            if (updatedPost.getTags() != null) {
-                post.setTags(updatedPost.getTags());
-            }
-            if (updatedPost.getTemplate() != null) {
-                post.setTemplate(updatedPost.getTemplate());
-            }
-            post.setUpdatedAt(LocalDateTime.now());
-            return postRepository.save(post);
-        }
-        return null;
-    }
-
-    public void deletePost(String id) {
-        postRepository.deleteById(id);
-    }
-
-    public Post addLike(String postId, String userId) {
-        Optional<Post> optionalPost = postRepository.findById(postId);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            post.addLike(userId);
-            return postRepository.save(post);
-        }
-        return null;
-    }
-
-    public Post removeLike(String postId, String userId) {
-        Optional<Post> optionalPost = postRepository.findById(postId);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            post.removeLike(userId);
-            return postRepository.save(post);
-        }
-        return null;
-    }
-
-    public List<String> findMatchingTags(String query) {
-        List<Post> posts = postRepository.findDistinctTagsByTagContainingIgnoreCase(query);
-        Set<String> distinctTags = new HashSet<>();
-        for (Post post : posts) {
-            if (post.getTags() != null) {
-                for (String tag : post.getTags()) {
-                    if (tag.toLowerCase().contains(query.toLowerCase())) {
-                        distinctTags.add(tag);
-                    }
-                }
-            }
-        }
-        return distinctTags.stream().sorted().collect(Collectors.toList());
-    }
-
-    public List<Post> findPostsByTag(String tag, String currentUserId) {
-        return postRepository.findByTagsContainingIgnoreCase(tag);
+    public List<Post> getAllPosts() {
+        return postRepository.findAll();
     }
 
     public List<PostResponseDto> getAllPostsWithUserDetails(String currentUserId) {
@@ -155,9 +100,65 @@ public class PostService {
             dto.setAvatar(user != null ? user.getProfilePhoto() : null);
             dto.setLikeCount(post.getLikeCount());
             dto.setLikes(post.getLikes());
-            dto.setIsLiked(post.getLikes().contains(currentUserId));
+            dto.setIsLiked(post.getLikes() != null && post.getLikes().contains(currentUserId));
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    public long getPostCountByUserId(String userId) {
+        return postRepository.countByUserId(userId);
+    }
+
+    public Post updatePost(String id, Post updatedPost) {
+        Optional<Post> existingPost = postRepository.findById(id);
+        if (existingPost.isPresent()) {
+            Post post = existingPost.get();
+            post.setContent(updatedPost.getContent());
+            post.setMediaLinks(updatedPost.getMediaLinks());
+            post.setTags(updatedPost.getTags());
+            post.setTemplate(updatedPost.getTemplate());
+            return postRepository.save(post);
+        }
+        return null;
+    }
+
+    public void deletePost(String id) {
+        postRepository.deleteById(id);
+    }
+
+    public Post addLike(String postId, String userId) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            List<String> likes = post.getLikes();
+            if (!likes.contains(userId)) {
+                likes.add(userId);
+                post.setLikeCount(likes.size());
+                return postRepository.save(post);
+            }
+        }
+        return null;
+    }
+
+    public Post removeLike(String postId, String userId) {
+        Optional<Post> postOptional = postRepository.findById(postId);
+        if (postOptional.isPresent()) {
+            Post post = postOptional.get();
+            List<String> likes = post.getLikes();
+            if (likes.remove(userId)) {
+                post.setLikeCount(likes.size());
+                return postRepository.save(post);
+            }
+        }
+        return null;
+    }
+
+    public List<String> findMatchingTags(String query) {
+        return postRepository.findDistinctTags(query);
+    }
+
+    public List<Post> findPostsByTag(String tag, String currentUserId) {
+        return postRepository.findByTagsContainingIgnoreCase(tag);
     }
 
     public UserRepository getUserRepository() {
