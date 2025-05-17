@@ -6,9 +6,6 @@ import {
   FaHeart,
   FaRegHeart,
   FaComment,
-  FaShare,
-  FaBookmark,
-  FaRegBookmark,
   FaEllipsisH,
   FaEdit,
   FaTrash,
@@ -112,16 +109,6 @@ const PostCard = ({
     } catch (error) {
       console.error('Failed to toggle like:', error);
     }
-  };
-
-  const handleBookmarkToggle = () => {
-    setPosts(prevPosts =>
-      prevPosts.map(p =>
-        p.id === post.id
-          ? { ...p, isBookmarked: !p.isBookmarked }
-          : p
-      )
-    );
   };
 
   const handleEditPost = () => {
@@ -502,19 +489,7 @@ const PostCard = ({
             <FaComment />
             <span className="action-count">{post.comments || 0}</span>
           </Button>
-          <Button variant="link" className="action-btn share-btn" aria-label="Share post">
-            <FaShare />
-            <span className="action-count">0</span>
-          </Button>
         </div>
-        <Button
-          variant="link"
-          className={`action-btn bookmark-btn ${post.isBookmarked ? 'bookmarked' : ''}`}
-          onClick={handleBookmarkToggle}
-          aria-label={post.isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
-        >
-          {post.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-        </Button>
       </Card.Footer>
 
       {showComments && (

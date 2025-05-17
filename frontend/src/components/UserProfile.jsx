@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Button, Dropdown } from "react-bootstrap";
 import {
   getFollowersCount,
   getFollowingCount,
 } from "../services/followService";
+import { FaEllipsisH, FaEdit, FaTrash } from "react-icons/fa";
 import "../styles/UserProfile.css";
 
 // Configure Axios base URL (adjust as needed for your backend)
@@ -18,8 +20,10 @@ const UserProfile = ({ user }) => {
   const [activeTab, setActiveTab] = useState("posts");
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(null);
 
   const navigate = useNavigate();
+  const dropdownRefs = useRef({});
 
   useEffect(() => {
     const fetchPostsAndCount = async () => {
@@ -30,7 +34,26 @@ const UserProfile = ({ user }) => {
 
         // Fetch posts
         const postsResponse = await axios.get(`/api/auth/posts/user/${user.id}`);
-        setPosts(postsResponse.data);
+        // Transform posts to match PostCard expectations
+        const transformedPosts = postsResponse.data.map(post => ({
+          id: post.id || Math.random().toString(36).substr(2, 9),
+          title: post.title || "",
+          content: post.content || "",
+          mediaLinks: post.mediaLinks || [],
+          tags: post.tags || [],
+          template: post.template || "general",
+          createdAt: post.createdAt || new Date().toISOString(),
+          userId: String(post.userId || user.id),
+          username: user.username || "Unknown User",
+          avatar: user.profilePhoto || "https://via.placeholder.com/48",
+          likeCount: post.likeCount || 0,
+          likes: post.likes || [],
+          isLiked: false, // Not provided in /user endpoint, set to false
+          comments: post.comments || 0,
+          commentsList: [], // Comments not fetched here
+        }));
+
+        setPosts(transformedPosts);
 
         // Fetch post count
         const countResponse = await axios.get(`/api/auth/posts/count/${user.id}`);
@@ -72,6 +95,58 @@ const UserProfile = ({ user }) => {
 
   const handleEditProfile = () => {
     navigate("/profile/edit");
+  };
+
+  const toggleDropdown = (postId) => {
+    setShowDropdown(prev => (prev === postId ? null : postId));
+  };
+
+  const handleEditPost = (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+      setError("Post not found");
+      return;
+    }
+    if (post.userId !== String(user.id)) {
+      setError("You are not authorized to edit this post");
+      return;
+    }
+    toggleDropdown(null);
+    navigate(`/update-post/${postId}`, { state: { post } });
+  };
+
+  const handleDeletePost = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+      setError("Post not found");
+      return;
+    }
+    if (post.userId !== String(user.id)) {
+      setError("You are not authorized to delete this post");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      if (!token) {
+        setError("Authentication token not found");
+        return;
+      }
+
+      await axios.delete(`/api/auth/posts/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+      setPostCount(prev => prev - 1);
+      setShowDropdown(null);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      setError("Failed to delete post");
+    }
   };
 
   if (loading) {
@@ -192,6 +267,35 @@ const UserProfile = ({ user }) => {
                       </span>
                     </div>
                   </div>
+                  {post.userId === String(user.id) && (
+                    <div className="post-options-container" ref={el => (dropdownRefs.current[post.id] = el)}>
+                      <Button
+                        variant="link"
+                        className="post-options"
+                        onClick={() => toggleDropdown(post.id)}
+                      >
+                        <FaEllipsisH />
+                      </Button>
+                      {showDropdown === post.id && (
+                        <Dropdown show className="post-dropdown-menu">
+                          <Dropdown.Menu className="dropdown-menu-custom">
+                            <Dropdown.Item
+                              onClick={() => handleEditPost(post.id)}
+                              className="dropdown-item-custom"
+                            >
+                              <FaEdit className="me-2" /> Edit Post
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={() => handleDeletePost(post.id)}
+                              className="dropdown-item-custom text-danger"
+                            >
+                              <FaTrash className="me-2" /> Delete Post
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

@@ -121,9 +121,9 @@ public class PostResponseDto {
         return avatar;
     }
 
-    // public void setAvatar(String avatar) {
-    //     this.avatar = avatar;
-    // }
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 
     public int getLikeCount() {
         return likeCount;

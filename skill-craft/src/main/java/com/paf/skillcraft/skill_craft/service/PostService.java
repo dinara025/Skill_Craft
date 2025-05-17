@@ -32,6 +32,10 @@ public class PostService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
     public Post createPost(Post post) {
         if (post == null) {
             throw new IllegalArgumentException("Post cannot be null");
@@ -119,6 +123,7 @@ public class PostService {
             responseDto.setId(post.getId());
             responseDto.setUserId(post.getUserId());
             responseDto.setUsername(user != null ? user.getUsername() : "Unknown");
+            responseDto.setAvatar(user != null ? user.getProfilePhoto() : null);
             responseDto.setContent(post.getContent());
             responseDto.setMediaLinks(post.getMediaLinks());
             responseDto.setTags(post.getTags());
