@@ -28,7 +28,7 @@ function CourseManager() {
 
   const loadCourses = async () => {
     try {
-      const result = await axios.get("http://localhost:8081/api/v1/course/all");
+      const result = await axios.get("http://localhost:8081/api/auth/v1/course/all");
       setCourses(result.data);
     } catch (error) {
       console.error("Error loading courses:", error);
@@ -41,7 +41,7 @@ function CourseManager() {
     if (!validateForm()) return;
     
     try {
-      await axios.post("http://localhost:8081/api/v1/course/add", {
+      await axios.post("http://localhost:8081/api/auth/v1/course/add", {
         title, description, category, pdfUrl
       });
       alert("Course Added Successfully");
@@ -57,7 +57,7 @@ function CourseManager() {
     if (!validateForm()) return;
     
     try {
-      await axios.put(`http://localhost:8081/api/v1/course/update/${id}`, {
+      await axios.put(`http://localhost:8081/api/auth/v1/course/update/${id}`, {
         title, description, category, pdfUrl
       });
       alert("Course Updated Successfully");
@@ -72,7 +72,7 @@ function CourseManager() {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     
     try {
-      await axios.delete(`http://localhost:8081/api/v1/course/delete/${courseId}`);
+      await axios.delete(`http://localhost:8081/api/auth/v1/course/delete/${courseId}`);
       alert("Course Deleted Successfully");
       loadCourses();
     } catch (error) {
