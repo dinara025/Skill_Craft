@@ -15,7 +15,8 @@ import UpdatePost from "./components/UpdatePost";
 import UserProfile from "./components/UserProfile";
 import AdminLoginPage from "./components/AdminLoginPage";
 import ThreadsPage from "./components/ThreadsPage";
-import ProfileEdit from "./components/ProfileEdit"; // Added ProfileEdit import
+import ProfileEdit from "./components/ProfileEdit";
+import LearningJourneyForm from "./components/LearningJourneyForm"; // Added import for LearningJourneyForm
 import OAuth2RedirectHandler from "./components/OAuth2RedirectHandler";
 import NotificationThread from "./components/NotificationThread";
 import { requestNotificationPermission } from "./config/firebaseMessaging";
@@ -45,7 +46,6 @@ function App() {
         }
 
         const userData = await response.json();
-        // Add token to the fetched user details
         setLoggedInUser({ ...userData, token });
       } catch (error) {
         console.error("Error fetching user details:", error);
@@ -55,7 +55,6 @@ function App() {
 
     if (token && username) {
       fetchUserDetails(username, token);
-      console.log(loggedInUser);
     }
   }, []);
 
@@ -79,7 +78,6 @@ function App() {
 
       const userData = await response.json();
       setLoggedInUser({ ...userData, token });
-      console.log("the id of the user: ", userData.id);
       localStorage.setItem("usersId", userData.id);
     } catch (err) {
       console.error("Login error:", err);
@@ -100,8 +98,8 @@ function App() {
           {!loggedInUser ? (
             <>
               <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
-              <Route path="*" element={<Navigate to="/" />} />
               <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </>
           ) : (
             <>
@@ -132,11 +130,15 @@ function App() {
                 path="/notifications"
                 element={<NotificationThread userId={loggedInUser.id} />}
               />
-              <Route path="/profile/edit" element={<ProfileEdit />} />{" "}
-              {/* Added route for ProfileEdit */}
-              <Route path="*" element={<Navigate to="/" />} />
-              <Route path="/" element={<AuthPage onLogin={handleLogin} />} />
-              <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="/profile/edit" element={<ProfileEdit />} />
+              <Route
+                path="/learning-journey/create"
+                element={<LearningJourneyForm user={loggedInUser} />}
+              />
+              <Route
+                path="/learning-journey/edit/:entryId"
+                element={<LearningJourneyForm user={loggedInUser} />}
+              />
               <Route path="*" element={<Navigate to="/" />} />
             </>
           )}

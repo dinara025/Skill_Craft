@@ -12,9 +12,12 @@ public interface PostRepository extends MongoRepository<Post, String> {
     // Optional: to find posts liked by a specific user
     List<Post> findByLikesContaining(String userId);
     
-    // New: to count posts by userId
+    // To count posts by userId
     long countByUserId(String userId);
 
     @Query("{ 'tags' : { $regex: ?0, $options: 'i' } }")
     List<Post> findByTagsContainingIgnoreCase(String tag);
+
+    @Query(value = "{ 'tags' : { $regex: ?0, $options: 'i' } }", fields = "{ 'tags' : 1 }")
+    List<Post> findDistinctTagsByTagContainingIgnoreCase(String query);
 }

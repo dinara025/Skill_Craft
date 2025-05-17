@@ -6,16 +6,14 @@ import {
   FaHeart,
   FaRegHeart,
   FaComment,
-  FaShare,
-  FaBookmark,
-  FaRegBookmark,
   FaEllipsisH,
   FaEdit,
   FaTrash,
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
-  FaPlay
+  FaPlay,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import {
   formatDistanceToNow,
@@ -69,6 +67,7 @@ const PostCard = ({
   const [modalMediaIndex, setModalMediaIndex] = useState(0);
   const [comments, setComments] = useState(post.commentsList || []);
   const [playingVideos, setPlayingVideos] = useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false); // New state for delete confirmation
   const videoRefs = useRef({});
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -114,16 +113,6 @@ const PostCard = ({
     }
   };
 
-  const handleBookmarkToggle = () => {
-    setPosts(prevPosts =>
-      prevPosts.map(p =>
-        p.id === post.id
-          ? { ...p, isBookmarked: !p.isBookmarked }
-          : p
-      )
-    );
-  };
-
   const handleEditPost = () => {
     if (!isPostOwner) {
       console.warn(`User ${userId} is not authorized to edit post ${post.id}`);
@@ -131,6 +120,20 @@ const PostCard = ({
     }
     toggleDropdown(null);
     navigate(`/update-post/${post.id}`, { state: { post } });
+  };
+
+  const handleShowDeleteDialog = () => {
+    setShowDeleteDialog(true);
+    toggleDropdown(null);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setShowDeleteDialog(false);
+  };
+
+  const handleConfirmDelete = () => {
+    handleDeletePost(post.id);
+    setShowDeleteDialog(false);
   };
 
   const handleNextImage = () => {
@@ -366,7 +369,7 @@ const PostCard = ({
                     <FaEdit className="me-2" /> Edit Post
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={() => handleDeletePost(post.id)}
+                    onClick={handleShowDeleteDialog}
                     className="dropdown-item-custom text-danger"
                   >
                     <FaTrash className="me-2" /> Delete Post
@@ -502,19 +505,7 @@ const PostCard = ({
             <FaComment />
             <span className="action-count">{post.comments || 0}</span>
           </Button>
-          <Button variant="link" className="action-btn share-btn" aria-label="Share post">
-            <FaShare />
-            <span className="action-count">0</span>
-          </Button>
         </div>
-        <Button
-          variant="link"
-          className={`action-btn bookmark-btn ${post.isBookmarked ? 'bookmarked' : ''}`}
-          onClick={handleBookmarkToggle}
-          aria-label={post.isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
-        >
-          {post.isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-        </Button>
       </Card.Footer>
 
       {showComments && (
@@ -581,6 +572,28 @@ const PostCard = ({
           )}
         </Modal.Body>
       </Modal>
+
+      {showDeleteDialog && (
+        <div className="delete-confirmation-dialog">
+          <div className="delete-confirmation-content">
+            <div className="delete-confirmation-header">
+              <FaExclamationTriangle className="text-warning me-2" size={24} />
+              <h5>Delete Post</h5>
+            </div>
+            <div className="delete-confirmation-body">
+              <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+              <div className="delete-confirmation-buttons">
+                <Button variant="outline-secondary" onClick={handleCloseDeleteDialog} className="px-4">
+                  Cancel
+                </Button>
+                <Button variant="danger" onClick={handleConfirmDelete} className="px-4">
+                  Confirm Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

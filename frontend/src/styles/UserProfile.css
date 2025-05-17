@@ -462,3 +462,30 @@
   border-radius: 12px;
   font-size: 0.8rem;
 }
+
+.post-options-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.post-options {
+  color: #333;
+  font-size: 1.2rem;
+  padding: 0;
+}
+.post-dropdown-menu .dropdown-menu-custom {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.dropdown-item-custom {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+.dropdown-item-custom.text-danger {
+  color: #dc3545;
+}
+.dropdown-item-custom .me-2 {
+  margin-right: 8px;
+}

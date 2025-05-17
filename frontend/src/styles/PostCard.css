@@ -136,20 +136,6 @@
     background: #f8f9fa;
 }
 
-/* .media-frame {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 8px;
-    background: #f1f3f5;
-    aspect-ratio: 16 / 9;
-    cursor: pointer;
-} */
-
 .post-media {
     width: 100%;
     height: 100%;
@@ -281,7 +267,17 @@
 }
 
 .like-btn.liked {
-    color: #e0245e !important;
+    color: #ff0000 !important;
+}
+
+.like-btn.liked .like-icon {
+    color: #ff0000 !important;
+    fill: #ff0000 !important;
+}
+
+.like-btn .like-icon {
+    font-size: 1.2rem;
+    transition: color 0.2s ease, fill 0.2s ease;
 }
 
 .bookmark-btn.bookmarked {
@@ -421,7 +417,7 @@
 .video-container {
     position: relative;
     width: 100%;
-    max-width: 90%; /* Reduce max-width to make videos smaller */
+    max-width: 90%;
     height: auto;
     margin: 0 auto;
     background-color: #000;
@@ -458,6 +454,59 @@
 .play-icon:hover {
     opacity: 1;
     transform: scale(1.1);
+}
+
+/* Delete Confirmation Dialog */
+.delete-confirmation-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+}
+
+.delete-confirmation-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.delete-confirmation-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.delete-confirmation-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.delete-confirmation-body {
+    text-align: center;
+}
+
+.delete-confirmation-body p {
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.delete-confirmation-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.delete-confirmation-buttons .btn {
+    min-width: 120px;
 }
 
 /* For modal videos */
@@ -516,23 +565,14 @@
     .modal-video {
         height: 50vh;
     }
-}
 
-.like-btn.liked {
-  color: #ff0000 !important; /* Ensure red color for liked state */
-}
+    .delete-confirmation-content {
+        padding: 1rem;
+        max-width: 300px;
+    }
 
-.like-btn.liked .like-icon {
-  color: #ff0000 !important; /* Explicitly set icon color */
-  fill: #ff0000 !important; /* For SVG fill */
-}
-
-.like-btn .like-icon {
-  font-size: 1.2rem;
-  transition: color 0.2s ease, fill 0.2s ease;
-}
-
-.action-count {
-  font-size: 0.9rem;
-  color: inherit;
+    .delete-confirmation-buttons .btn {
+        min-width: 100px;
+        padding: 0.5rem;
+    }
 }
