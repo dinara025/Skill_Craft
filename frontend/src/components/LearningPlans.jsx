@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, InputGroup, Form, Offcanvas } from "react-bootstrap";
-import { useNavigate } from 'react-router-dom';
 import {
-    FaSearch,
-    FaUserPlus,
-    FaChalkboardTeacher,
-    FaBook,
-    FaBookOpen
-  } from 'react-icons/fa';
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  InputGroup,
+  Form,
+  Offcanvas,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import {
+  FaSearch,
+  FaUserPlus,
+  FaChalkboardTeacher,
+  FaBook,
+  FaBookOpen,
+} from "react-icons/fa";
 import { BsPlusCircleFill } from "react-icons/bs";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import Header from "../components/Header";
@@ -16,8 +25,8 @@ import {
   fetchPlansByUser,
   createPlan,
   updatePlan,
-  deletePlan
-} from '../services/learningServices';
+  deletePlan,
+} from "../services/learningServices";
 
 import "../styles/MainPage.css";
 import "../styles/LearningPlans.css";
@@ -41,8 +50,7 @@ const LearningPlans = ({ user }) => {
   const navigate = useNavigate();
 
   //get user id from localStorage
-  const userId = localStorage.getItem('usersId');
-
+  const userId = localStorage.getItem("usersId");
 
   // fetching the plans for the user
   useEffect(() => {
@@ -51,44 +59,93 @@ const LearningPlans = ({ user }) => {
 
   const fetchPlans = () => {
     fetchPlansByUser(userId)
-      .then(res => {
+      .then((res) => {
         setPlans(res.data);
         setLoading(false);
       })
-      .catch(err => console.error(err));
+      .catch((err) => console.error(err));
   };
 
-  const handleSubmit = e => {
+  const templates = {
+    "python for beginners": {
+      description:
+        "This plan covers the basics of Python programming including syntax, variables, control structures, and simple data structures.",
+      topics: "Syntax, Variables, Loops, Conditionals, Lists, Functions",
+      resources: "Python.org, W3Schools, Codecademy, Real Python",
+      targetCompletionDate: new Date().toISOString().split("T")[0], // today's date
+      completed: false,
+    },
+    "data visualization": {
+      description:
+        "Learn how to communicate data insights effectively using charts, graphs, and interactive visuals with tools like Matplotlib, Seaborn, and Tableau.",
+      topics:
+        "Charts, Graphs, Matplotlib, Seaborn, Tableau, Dashboard Design, Storytelling with Data",
+      resources:
+        "Tableau Public, Seaborn Docs, Matplotlib Tutorials, DataCamp, Storytelling with Data Book",
+      targetCompletionDate: "2025-06-15",
+      completed: false,
+    },
+    "data modeling": {
+      description:
+        "Understand how to design and structure data systems for analytics and databases, including normalization, ER diagrams, and schema design.",
+      topics:
+        "Entity-Relationship Modeling, Normalization, Star Schema, Snowflake Schema, SQL, Dimensional Modeling",
+      resources:
+        "Khan Academy SQL, Database Design by Adrienne Watt, Vertabelo Blog, IBM Data Modeling Resources",
+      targetCompletionDate: "2025-06-30",
+      completed: false,
+    },
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     const payload = {
       ...form,
       userId,
-      topics: form.topics.split(',').map(t => t.trim()),
-      resources: form.resources.split(',').map(r => r.trim()),
+      topics: form.topics.split(",").map((t) => t.trim()),
+      resources: form.resources.split(",").map((r) => r.trim()),
     };
 
-    const req = editId
-      ? updatePlan(editId, payload)
-      : createPlan(payload);
+    const req = editId ? updatePlan(editId, payload) : createPlan(payload);
 
-    req.then(() => {
-      fetchPlans();
-      closeDrawer();
-    }).catch(err => console.error(err));
+    req
+      .then(() => {
+        fetchPlans();
+        closeDrawer();
+      })
+      .catch((err) => console.error(err));
   };
 
-  const handleDelete = id => {
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this plan?")) {
       deletePlan(id).then(() => fetchPlans());
     }
   };
 
-  const handleInputChange = e => {
+  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const newValue = type === "checkbox" ? checked : value;
+
+    setForm((prev) => {
+      const updatedForm = {
+        ...prev,
+        [name]: newValue,
+      };
+
+      // Auto-template trigger based on title
+      if (name === "title") {
+        const key = value.toLowerCase().trim();
+        if (templates[key]) {
+          return {
+            ...updatedForm,
+            ...templates[key],
+            title: value, // preserve original user-typed title
+          };
+        }
+      }
+
+      return updatedForm;
+    });
   };
 
   const openDrawer = (plan = null) => {
@@ -115,17 +172,24 @@ const LearningPlans = ({ user }) => {
     setEditId(null);
   };
 
-  const currentUser = user ? {
-    id: user.id,
-    name: user.username,
-    handle: `@${user.username.toLowerCase()}`,
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    skills: ["UI/UX", "React", "Figma"]
-  } : {
-    name: "Guest User",
-    handle: "@guest",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    skills: []
+  const currentUser = user
+    ? {
+        id: user.id,
+        name: user.username,
+        handle: `@${user.username.toLowerCase()}`,
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+        skills: ["UI/UX", "React", "Figma"],
+      }
+    : {
+        name: "Guest User",
+        handle: "@guest",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+        skills: [],
+      };
+
+  const handleReset = () => {
+    setForm(initialForm);
+    setEditId(null);
   };
 
   return (
@@ -138,79 +202,115 @@ const LearningPlans = ({ user }) => {
           <Row>
             {/* Left Sidebar */}
             <Col lg={3} className="left-sidebar d-none d-lg-block">
-            <Card className="profile-card">
+              <Card className="profile-card">
                 <div className="profile-header">
-                <img
+                  <img
                     src={currentUser.avatar}
                     alt={currentUser.name}
                     className="profile-avatar"
-                />
-                <div className="profile-info">
+                  />
+                  <div className="profile-info">
                     <h5>{currentUser.name}</h5>
                     <p className="text-muted">{currentUser.handle}</p>
-                </div>
+                  </div>
                 </div>
                 <div className="profile-skills">
-                <h6>My Skills</h6>
-                <div className="skills-list">
+                  <h6>My Skills</h6>
+                  <div className="skills-list">
                     {currentUser.skills.map((skill, index) => (
-                    <span key={index} className="skill-badge">{skill}</span>
+                      <span key={index} className="skill-badge">
+                        {skill}
+                      </span>
                     ))}
-                </div>
+                  </div>
                 </div>
                 <Button variant="outline-primary" className="edit-profile-btn">
-                Edit Profile
+                  Edit Profile
                 </Button>
-                <Button variant="danger" className="mt-2" onClick={() => {
-                localStorage.removeItem('jwtToken');
-                localStorage.removeItem('jwtUsername');
-                window.location.reload();
-                }}>
-                Logout
+                <Button
+                  variant="danger"
+                  className="mt-2"
+                  onClick={() => {
+                    localStorage.removeItem("jwtToken");
+                    localStorage.removeItem("jwtUsername");
+                    window.location.reload();
+                  }}
+                >
+                  Logout
                 </Button>
-            </Card>
+              </Card>
 
-            <Card className="trending-card">
+              <Card className="trending-card">
                 <Card.Body>
-                <h5>Trending Skills</h5>
-                <ul className="trending-list">
+                  <h5>Trending Skills</h5>
+                  <ul className="trending-list">
                     {[
-                    { name: "React.js", posts: 1243 },
-                    { name: "UI Design", posts: 892 },
-                    { name: "Python", posts: 765 },
-                    { name: "Digital Marketing", posts: 543 }
+                      { name: "React.js", posts: 1243 },
+                      { name: "UI Design", posts: 892 },
+                      { name: "Python", posts: 765 },
+                      { name: "Digital Marketing", posts: 543 },
                     ].map((skill, index) => (
-                    <li key={index}>
+                      <li key={index}>
                         <span className="skill-name">{skill.name}</span>
                         <span className="post-count">{skill.posts} posts</span>
-                    </li>
+                      </li>
                     ))}
-                </ul>
+                  </ul>
                 </Card.Body>
-            </Card>
+              </Card>
             </Col>
-
 
             {/* Main Content */}
             <Col lg={6}>
               <div className="learning-plans-container">
                 <h2>Your Learning Plans</h2>
-                <Button className="create-btn mb-3" onClick={() => openDrawer()}>
+                <Button
+                  className="create-btn mb-3"
+                  onClick={() => openDrawer()}
+                >
                   <BsPlusCircleFill className="me-1" /> Create New Plan
                 </Button>
-                {loading ? <p>Loading...</p> : (
+                {loading ? (
+                  <p>Loading...</p>
+                ) : (
                   <div className="plan-list">
-                    {plans.map(plan => (
-                      <Card key={plan.id} className="plan-card shadow-sm mb-4 p-3">
+                    {plans.map((plan) => (
+                      <Card
+                        key={plan.id}
+                        className="plan-card shadow-sm mb-4 p-3"
+                      >
                         <h4>{plan.title}</h4>
                         <p className="text-muted">{plan.description}</p>
-                        <p><strong>Topics:</strong> {plan.topics.join(", ")}</p>
-                        <p><strong>Resources:</strong> {plan.resources.join(", ")}</p>
-                        <p><strong>Target Date:</strong> {plan.targetCompletionDate}</p>
-                        <p><strong>Status:</strong> {plan.completed ? "✅ Completed" : "⌛ In Progress"}</p>
+                        <p>
+                          <strong>Topics:</strong> {plan.topics.join(", ")}
+                        </p>
+                        <p>
+                          <strong>Resources:</strong>{" "}
+                          {plan.resources.join(", ")}
+                        </p>
+                        <p>
+                          <strong>Target Date:</strong>{" "}
+                          {plan.targetCompletionDate}
+                        </p>
+                        <p>
+                          <strong>Status:</strong>{" "}
+                          {plan.completed ? "✅ Completed" : "⌛ In Progress"}
+                        </p>
                         <div className="d-flex gap-2 mt-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => openDrawer(plan)}>Edit</Button>
-                          <Button size="sm" variant="danger" onClick={() => handleDelete(plan.id)}>Delete</Button>
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            onClick={() => openDrawer(plan)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDelete(plan.id)}
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </Card>
                     ))}
@@ -220,112 +320,120 @@ const LearningPlans = ({ user }) => {
             </Col>
 
             {/* Right Sidebar */}
-        <Col lg={3} className="right-sidebar d-none d-lg-block">
-        <InputGroup className="search-bar mb-4">
-            <InputGroup.Text>
-            <FaSearch />
-            </InputGroup.Text>
-            <Form.Control
-            type="search"
-            placeholder="Search skills, people, posts..."
-            />
-        </InputGroup>
+            <Col lg={3} className="right-sidebar d-none d-lg-block">
+              <InputGroup className="search-bar mb-4">
+                <InputGroup.Text>
+                  <FaSearch />
+                </InputGroup.Text>
+                <Form.Control
+                  type="search"
+                  placeholder="Search skills, people, posts..."
+                />
+              </InputGroup>
 
-        <Card className="quick-actions-card mb-4">
-            <Card.Body>
-            <h5>Quick Actions</h5>
-            <div className="actions-list">
-                {[
-                {
-                    icon: <BsPlusCircleFill className="action-icon" />,
-                    label: "Create Post",
-                    variant: "primary",
-                    onClick: () => navigate("/create-post")
-                },
-                {
-                    icon: <FaUserPlus className="action-icon" />,
-                    label: "Find Friends",
-                    variant: "outline-primary",
-                    onClick: () => navigate("/follow-system")
-                },
-                {
-                    icon: <FaChalkboardTeacher className="action-icon" />,
-                    label: "Start Teaching",
-                    variant: "outline-success"
-                },
-                {
-                    icon: <FaBook className="action-icon" />,
-                    label: "Learning Plans",
-                    variant: "outline-info",
-                    onClick: () => navigate("/learning-plans")
-                }
-                ].map((action, index) => (
-                <Button
-                    key={index}
-                    variant={action.variant}
-                    className="action-btn"
-                    onClick={action.onClick}
-                >
-                    {action.icon}
-                    {action.label}
-                </Button>
-                ))}
-            </div>
-            </Card.Body>
-        </Card>
+              <Card className="quick-actions-card mb-4">
+                <Card.Body>
+                  <h5>Quick Actions</h5>
+                  <div className="actions-list">
+                    {[
+                      {
+                        icon: <BsPlusCircleFill className="action-icon" />,
+                        label: "Create Post",
+                        variant: "primary",
+                        onClick: () => navigate("/create-post"),
+                      },
+                      {
+                        icon: <FaUserPlus className="action-icon" />,
+                        label: "Find Friends",
+                        variant: "outline-primary",
+                        onClick: () => navigate("/follow-system"),
+                      },
+                      {
+                        icon: <FaChalkboardTeacher className="action-icon" />,
+                        label: "Start Teaching",
+                        variant: "outline-success",
+                      },
+                      {
+                        icon: <FaBook className="action-icon" />,
+                        label: "Learning Plans",
+                        variant: "outline-info",
+                        onClick: () => navigate("/learning-plans"),
+                      },
+                    ].map((action, index) => (
+                      <Button
+                        key={index}
+                        variant={action.variant}
+                        className="action-btn"
+                        onClick={action.onClick}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
 
-        <Card className="suggested-people-card">
-            <Card.Body>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0">Suggested People</h5>
-                <Button variant="link" className="see-all-btn">See All</Button>
-            </div>
-            <div className="people-list">
-                {[
-                {
-                    name: "Sarah Miller",
-                    handle: "@sarahdesigns",
-                    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-                    skill: "UI/UX Designer"
-                },
-                {
-                    name: "Michael Chen",
-                    handle: "@michaelcode",
-                    avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-                    skill: "Full Stack Developer"
-                },
-                {
-                    name: "Priya Patel",
-                    handle: "@priyatech",
-                    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-                    skill: "Data Scientist"
-                }
-                ].map((person, index) => (
-                <div key={index} className="person-item">
-                    <img
-                    src={person.avatar}
-                    alt={person.name}
-                    className="person-avatar"
-                    />
-                    <div className="person-info">
-                    <h6>{person.name}</h6>
-                    <p className="text-muted">{person.skill}</p>
-                    </div>
-                    <Button variant="outline-primary" size="sm" className="follow-btn">
-                    Follow
+              <Card className="suggested-people-card">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="mb-0">Suggested People</h5>
+                    <Button variant="link" className="see-all-btn">
+                      See All
                     </Button>
-                </div>
-                ))}
-            </div>
-            </Card.Body>
-        </Card>
+                  </div>
+                  <div className="people-list">
+                    {[
+                      {
+                        name: "Sarah Miller",
+                        handle: "@sarahdesigns",
+                        avatar:
+                          "https://randomuser.me/api/portraits/women/44.jpg",
+                        skill: "UI/UX Designer",
+                      },
+                      {
+                        name: "Michael Chen",
+                        handle: "@michaelcode",
+                        avatar:
+                          "https://randomuser.me/api/portraits/men/22.jpg",
+                        skill: "Full Stack Developer",
+                      },
+                      {
+                        name: "Priya Patel",
+                        handle: "@priyatech",
+                        avatar:
+                          "https://randomuser.me/api/portraits/women/68.jpg",
+                        skill: "Data Scientist",
+                      },
+                    ].map((person, index) => (
+                      <div key={index} className="person-item">
+                        <img
+                          src={person.avatar}
+                          alt={person.name}
+                          className="person-avatar"
+                        />
+                        <div className="person-info">
+                          <h6>{person.name}</h6>
+                          <p className="text-muted">{person.skill}</p>
+                        </div>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="follow-btn"
+                        >
+                          Follow
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
 
-        <Button variant="light" className="notifications-btn">
-            <IoMdNotificationsOutline size={20} />
-            <span className="notification-count">3</span>
-        </Button>
-        </Col>
-
+              <Button variant="light" className="notifications-btn">
+                <IoMdNotificationsOutline size={20} />
+                <span className="notification-count">3</span>
+              </Button>
+            </Col>
           </Row>
         </Container>
       </main>
@@ -333,34 +441,75 @@ const LearningPlans = ({ user }) => {
       {/* Offcanvas Drawer */}
       <Offcanvas show={showDrawer} onHide={closeDrawer} placement="end">
         <Offcanvas.Header closeButton>
-          <Offcanvas.Title>{editId ? "Edit Plan" : "Create Plan"}</Offcanvas.Title>
+          <Offcanvas.Title>
+            {editId ? "Edit Plan" : "Create Plan"}
+          </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-2">
               <Form.Label>Title</Form.Label>
-              <Form.Control name="title" value={form.title} onChange={handleInputChange} required />
+              <Form.Control
+                name="title"
+                value={form.title}
+                onChange={handleInputChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Description</Form.Label>
-              <Form.Control as="textarea" name="description" value={form.description} onChange={handleInputChange} required />
+              <Form.Control
+                as="textarea"
+                name="description"
+                value={form.description}
+                onChange={handleInputChange}
+                required
+              />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Topics</Form.Label>
-              <Form.Control name="topics" value={form.topics} onChange={handleInputChange} placeholder="Comma-separated" />
+              <Form.Control
+                name="topics"
+                value={form.topics}
+                onChange={handleInputChange}
+                placeholder="Comma-separated"
+              />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Resources</Form.Label>
-              <Form.Control name="resources" value={form.resources} onChange={handleInputChange} placeholder="Comma-separated" />
+              <Form.Control
+                name="resources"
+                value={form.resources}
+                onChange={handleInputChange}
+                placeholder="Comma-separated"
+              />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Target Completion Date</Form.Label>
-              <Form.Control type="date" name="targetCompletionDate" value={form.targetCompletionDate} onChange={handleInputChange} />
+              <Form.Control
+                type="date"
+                name="targetCompletionDate"
+                value={form.targetCompletionDate}
+                onChange={handleInputChange}
+              />
             </Form.Group>
-            <Form.Check type="checkbox" label="Completed" name="completed" checked={form.completed} onChange={handleInputChange} />
+            <Form.Check
+              type="checkbox"
+              label="Completed"
+              name="completed"
+              checked={form.completed}
+              onChange={handleInputChange}
+            />
             <div className="mt-3 d-flex gap-2">
-              <Button type="submit" variant="success">{editId ? "Update" : "Create"}</Button>
-              <Button variant="secondary" onClick={closeDrawer}>Cancel</Button>
+              <Button type="submit" variant="success">
+                {editId ? "Update" : "Create"}
+              </Button>
+              <Button variant="secondary" onClick={closeDrawer}>
+                Cancel
+              </Button>
+              <Button variant="outline-warning" onClick={handleReset}>
+                Reset
+              </Button>
             </div>
           </Form>
         </Offcanvas.Body>
