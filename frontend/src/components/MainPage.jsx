@@ -12,14 +12,16 @@ import Header from '../components/Header';
 import PostList from '../components/PostList';
 import NavBar from '../components/NavBar';
 import CreatePost from './CreatePost';
+import axios from 'axios';
 import '../styles/MainPage.css';
 
 const MainPage = ({ user }) => {
   const navigate = useNavigate();
   const [showNavBar, setShowNavBar] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ------------------ TOKEN EXPIRATION CHECK ------------------
   const isTokenExpired = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -32,14 +34,12 @@ const MainPage = ({ user }) => {
     }
   };
 
-  // ------------------ LOGOUT ------------------
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtUsername');
     navigate('/login');
   };
 
-  // ------------------ AUTH CHECK AND AUTO-LOGOUT ------------------
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
     if (!token || isTokenExpired(token)) {
@@ -64,6 +64,40 @@ const MainPage = ({ user }) => {
       handleLogout();
     }, timeLeft);
 
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      try {
+        const username = payload.sub; // Assuming 'sub' contains the username
+        const response = await axios.get(`http://localhost:8080/api/auth/userDetails/${username}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        const userData = response.data;
+        setCurrentUser({
+          id: userData.id || null,
+          name: userData.username || 'Guest User',
+          handle: userData.username ? `@${userData.username.toLowerCase()}` : '@guest',
+          avatar: userData.profilePhoto || 'https://randomuser.me/api/portraits/men/32.jpg',
+          skills: userData.skills || ['UI/UX', 'React', 'Figma']
+        });
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        setCurrentUser({
+          id: null,
+          name: 'Guest User',
+          handle: '@guest',
+          avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+          skills: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+
     console.log('MainPage user prop:', user);
     if (user && user.id) {
       console.log('User ID passed to Header:', user.id);
@@ -73,23 +107,6 @@ const MainPage = ({ user }) => {
 
     return () => clearTimeout(timeout);
   }, [navigate, user]);
-
-  // Construct currentUser with fallback for undefined user
-  const currentUser = user && user.id && user.username
-    ? {
-        id: user.id,
-        name: user.username,
-        handle: `@${user.username.toLowerCase()}`,
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        skills: user.skills || ['UI/UX', 'React', 'Figma'],
-      }
-    : {
-        id: null,
-        name: 'Guest User',
-        handle: '@guest',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        skills: [],
-      };
 
   const quickActions = [
     {
@@ -146,15 +163,26 @@ const MainPage = ({ user }) => {
     },
   ];
 
-  // Handle search query change
   const handleSearch = (query) => {
     setSearchQuery(query);
   };
 
-  // Clear search
   const handleClearSearch = () => {
     setSearchQuery('');
   };
+
+  // Fallback currentUser if still loading or null
+  const safeCurrentUser = currentUser || {
+    id: null,
+    name: 'Guest User',
+    handle: '@guest',
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    skills: []
+  };
+
+  if (loading) {
+    return <div className="text-center my-4">Loading...</div>;
+  }
 
   return (
     <div className="skillshare-social">
@@ -174,19 +202,19 @@ const MainPage = ({ user }) => {
               <Card className="profile-card">
                 <div className="profile-header">
                   <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
+                    src={safeCurrentUser.avatar}
+                    alt={safeCurrentUser.name}
                     className="profile-avatar"
                   />
                   <div className="profile-info">
-                    <h5>{currentUser.name}</h5>
-                    <p className="text-muted">{currentUser.handle}</p>
+                    <h5>{safeCurrentUser.name}</h5>
+                    <p className="text-muted">{safeCurrentUser.handle}</p>
                   </div>
                 </div>
                 <div className="profile-skills">
                   <h6>My Skills</h6>
                   <div className="skills-list">
-                    {currentUser.skills.map((skill, index) => (
+                    {(safeCurrentUser.skills || []).map((skill, index) => (
                       <span key={index} className="skill-badge">{skill}</span>
                     ))}
                   </div>
@@ -223,7 +251,7 @@ const MainPage = ({ user }) => {
             {/* Main Feed */}
             <Col lg={6} className="main-feed">
               {user && user.id ? (
-                <CreatePost user={user} currentUser={currentUser} />
+                <CreatePost user={user} currentUser={safeCurrentUser} />
               ) : (
                 <Card className="text-center mb-3">
                   <Card.Body>
@@ -238,8 +266,8 @@ const MainPage = ({ user }) => {
                 </Card>
               )}
               <PostList
-                userId={currentUser.id}
-                user={currentUser}
+                userId={safeCurrentUser.id}
+                user={safeCurrentUser}
                 searchQuery={searchQuery}
               />
             </Col>
