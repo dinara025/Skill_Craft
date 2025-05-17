@@ -2,28 +2,28 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Button, Dropdown } from "react-bootstrap";
-import {
-  getFollowersCount,
-  getFollowingCount,
-} from "../services/followService";
+import { getFollowersCount, getFollowingCount } from "../services/followService";
 import { FaEllipsisH, FaEdit, FaTrash } from "react-icons/fa";
 import "../styles/UserProfile.css";
 
-// Configure Axios base URL (adjust as needed for your backend)
+// Configure Axios base URL
 axios.defaults.baseURL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 const UserProfile = ({ user }) => {
   const [posts, setPosts] = useState([]);
   const [postCount, setPostCount] = useState(0);
+  const [learningJourney, setLearningJourney] = useState(null); // Single object
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("posts");
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(null);
+  const [showJourneyDropdown, setShowJourneyDropdown] = useState(null);
 
   const navigate = useNavigate();
   const dropdownRefs = useRef({});
+  const journeyDropdownRefs = useRef({});
 
   useEffect(() => {
     const fetchPostsAndCount = async () => {
@@ -34,7 +34,6 @@ const UserProfile = ({ user }) => {
 
         // Fetch posts
         const postsResponse = await axios.get(`/api/auth/posts/user/${user.id}`);
-        // Transform posts to match PostCard expectations
         const transformedPosts = postsResponse.data.map(post => ({
           id: post.id || Math.random().toString(36).substr(2, 9),
           title: post.title || "",
@@ -48,22 +47,25 @@ const UserProfile = ({ user }) => {
           avatar: user.profilePhoto || "https://via.placeholder.com/48",
           likeCount: post.likeCount || 0,
           likes: post.likes || [],
-          isLiked: false, // Not provided in /user endpoint, set to false
+          isLiked: false,
           comments: post.comments || 0,
-          commentsList: [], // Comments not fetched here
+          commentsList: [],
         }));
-
         setPosts(transformedPosts);
 
         // Fetch post count
         const countResponse = await axios.get(`/api/auth/posts/count/${user.id}`);
         setPostCount(countResponse.data);
+
+        // Fetch learning journey (take first entry or null)
+        const journeyResponse = await axios.get(`/api/auth/learning-journey/user/${user.id}`);
+        setLearningJourney(journeyResponse.data[0] || null);
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError(
           err.response?.status === 404
-            ? "User posts not found. Please try again later."
-            : "An error occurred while fetching posts."
+            ? "User data not found. Please try again later."
+            : "An error occurred while fetching data."
         );
       } finally {
         setLoading(false);
@@ -75,7 +77,6 @@ const UserProfile = ({ user }) => {
         if (user?.username) {
           const followersRes = await getFollowersCount(user.username);
           setFollowersCount(followersRes.data);
-
           const followingRes = await getFollowingCount(user.username);
           setFollowingCount(followingRes.data);
         }
@@ -99,6 +100,10 @@ const UserProfile = ({ user }) => {
 
   const toggleDropdown = (postId) => {
     setShowDropdown(prev => (prev === postId ? null : postId));
+  };
+
+  const toggleJourneyDropdown = () => {
+    setShowJourneyDropdown(prev => !prev);
   };
 
   const handleEditPost = (postId) => {
@@ -146,6 +151,51 @@ const UserProfile = ({ user }) => {
     } catch (error) {
       console.error("Error deleting post:", error);
       setError("Failed to delete post");
+    }
+  };
+
+  const handleEditLearningJourney = () => {
+    if (!learningJourney) {
+      setError("Learning journey entry not found");
+      return;
+    }
+    if (learningJourney.userId !== String(user.id)) {
+      setError("You are not authorized to edit this entry");
+      return;
+    }
+    toggleJourneyDropdown();
+    navigate(`/learning-journey/edit/${learningJourney.id}`, { state: { entry: learningJourney } });
+  };
+
+  const handleDeleteLearningJourney = async () => {
+    if (!learningJourney) {
+      setError("Learning journey entry not found");
+      return;
+    }
+    if (learningJourney.userId !== String(user.id)) {
+      setError("You are not authorized to delete this entry");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      if (!token) {
+        setError("Authentication token not found");
+        return;
+      }
+
+      await axios.delete(`/api/auth/learning-journey/${learningJourney.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      setLearningJourney(null);
+      setShowJourneyDropdown(null);
+    } catch (error) {
+      console.error("Error deleting learning journey entry:", error);
+      setError("Failed to delete learning journey entry");
     }
   };
 
@@ -218,7 +268,6 @@ const UserProfile = ({ user }) => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="profile-tabs">
         <button
           className={`tab-button ${activeTab === "posts" ? "active" : ""}`}
@@ -238,9 +287,14 @@ const UserProfile = ({ user }) => {
         >
           <i className="fas fa-tasks"></i> Learning Plans
         </button>
+        <button
+          className={`tab-button ${activeTab === "learning-journey" ? "active" : ""}`}
+          onClick={() => setActiveTab("learning-journey")}
+        >
+          <i className="fas fa-graduation-cap"></i> Learning Journey
+        </button>
       </div>
 
-      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === "posts" && (
           <div className="posts-grid">
@@ -366,6 +420,64 @@ const UserProfile = ({ user }) => {
               <div className="empty-state">
                 <i className="fas fa-tasks"></i>
                 <p>No learning plans added</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "learning-journey" && (
+          <div className="learning-journey-list">
+            <Button
+              variant="primary"
+              className="mb-3"
+              onClick={() => navigate(learningJourney ? `/learning-journey/edit/${learningJourney.id}` : "/learning-journey/create")}
+            >
+              {learningJourney ? "Edit Learning Journey" : "Add Learning Journey"}
+            </Button>
+            {learningJourney ? (
+              <div className="learning-journey-card">
+                <div className="learning-journey-icon">
+                  <i className={`fas ${learningJourney.type === "skill" ? "fa-tools" : "fa-book-open"}`}></i>
+                </div>
+                <div className="learning-journey-info">
+                  <h4>{learningJourney.title}</h4>
+                  <p>{learningJourney.description || "No description"}</p>
+                  <span>{new Date(learningJourney.date).toLocaleDateString()}</span>
+                </div>
+                {learningJourney.userId === String(user.id) && (
+                  <div className="learning-journey-options" ref={el => (journeyDropdownRefs.current[learningJourney.id] = el)}>
+                    <Button
+                      variant="link"
+                      className="learning-journey-options"
+                      onClick={toggleJourneyDropdown}
+                    >
+                      <FaEllipsisH />
+                    </Button>
+                    {showJourneyDropdown && (
+                      <Dropdown show className="learning-journey-dropdown-menu">
+                        <Dropdown.Menu className="dropdown-menu-custom">
+                          <Dropdown.Item
+                            onClick={handleEditLearningJourney}
+                            className="dropdown-item-custom"
+                          >
+                            <FaEdit className="me-2" /> Edit Entry
+                          </Dropdown.Item>
+                          <Dropdown.Item
+                            onClick={handleDeleteLearningJourney}
+                            className="dropdown-item-custom text-danger"
+                          >
+                            <FaTrash className="me-2" /> Delete Entry
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <i className="fas fa-graduation-cap"></i>
+                <p>No learning journey yet</p>
               </div>
             )}
           </div>

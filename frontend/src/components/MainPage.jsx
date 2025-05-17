@@ -67,7 +67,7 @@ const MainPage = ({ user }) => {
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
-        const username = payload.sub; // Assuming 'sub' contains the username
+        const username = payload.sub;
         const response = await axios.get(`http://localhost:8080/api/auth/userDetails/${username}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -171,7 +171,6 @@ const MainPage = ({ user }) => {
     setSearchQuery('');
   };
 
-  // Fallback currentUser if still loading or null
   const safeCurrentUser = currentUser || {
     id: null,
     name: 'Guest User',
