@@ -30,6 +30,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/messages/**").permitAll() // ✅ Allow viewing messages
                 .requestMatchers(HttpMethod.POST, "/api/messages").authenticated()
                 .requestMatchers("/api/messages/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/course/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/course/get/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/course/add").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/course/update/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/course/delete/**").permitAll()
                 .requestMatchers("/api/**").authenticated()   // All other APIs → need JWT
                 
             )
