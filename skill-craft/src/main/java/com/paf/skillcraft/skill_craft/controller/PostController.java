@@ -127,7 +127,7 @@ public class PostController {
             dto.setAvatar(user != null ? user.getProfilePhoto() : null);
             dto.setLikeCount(post.getLikeCount());
             dto.setLikes(post.getLikes());
-            dto.setIsLiked(post.getLikes().contains(currentUserId));
+            dto.setIsLiked(post.getLikes() != null && post.getLikes().contains(currentUserId));
             return dto;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(responseDtos);
