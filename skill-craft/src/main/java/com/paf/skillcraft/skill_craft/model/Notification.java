@@ -7,34 +7,19 @@ import java.time.LocalDateTime;
 
 @Document(collection = "notifications")
 public class Notification {
+
     @Id
     private String id;
-
-    private String recipientId;   // User who receives the notification
-    private String senderId;      // User who triggered the notification
+    private String recipientId;
+    private String senderId;
+    private String senderUsername;
     private String postId;
     private String message;
-    private String type;          // e.g., "like", "comment"
-    private boolean isRead;
+    private String type;
+    private boolean read;
     private LocalDateTime timestamp;
 
-    public Notification() {
-        this.isRead = false;
-        this.timestamp = LocalDateTime.now();
-    }
-
-    public Notification(String recipientId, String senderId, String postId, String message, String type) {
-        this.recipientId = recipientId;
-        this.senderId = senderId;
-        this.postId = postId;
-        this.message = message;
-        this.type = type;
-        this.isRead = false;
-        this.timestamp = LocalDateTime.now();
-    }
-
     // Getters and Setters
-
     public String getId() {
         return id;
     }
@@ -57,6 +42,14 @@ public class Notification {
 
     public void setSenderId(String senderId) {
         this.senderId = senderId;
+    }
+
+    public String getSenderUsername() {
+        return senderUsername;
+    }
+
+    public void setSenderUsername(String senderUsername) {
+        this.senderUsername = senderUsername;
     }
 
     public String getPostId() {
@@ -84,11 +77,11 @@ public class Notification {
     }
 
     public boolean isRead() {
-        return isRead;
+        return read;
     }
 
     public void setRead(boolean read) {
-        isRead = read;
+        this.read = read;
     }
 
     public LocalDateTime getTimestamp() {

@@ -12,25 +12,21 @@ function NotificationThread({ userId, onClose }) {
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!userId) {
-        console.warn('No userId provided, skipping notification fetch');
+        setError('Please log in to view notifications.');
         setLoading(false);
-        setError('User ID is missing. Please log in.');
         navigate('/login');
         return;
       }
 
       const token = localStorage.getItem('jwtToken');
       if (!token) {
-        console.warn('No JWT token found in localStorage');
+        setError('Authentication required. Please log in.');
         setLoading(false);
-        setError('Authentication token is missing. Please log in.');
         navigate('/login');
         return;
       }
 
       try {
-        console.log('Fetching notifications for userId:', userId);
-        console.log('JWT Token payload:', JSON.parse(atob(token.split('.')[1])));
         const res = await axios.get(`http://localhost:8080/api/auth/notifications/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -38,52 +34,39 @@ function NotificationThread({ userId, onClose }) {
         });
 
         const notifs = res.data;
-        console.log('Fetched notifications:', notifs);
+        console.log('Fetched notifications:', JSON.stringify(notifs, null, 2)); // Detailed debug log
         setNotifications(Array.isArray(notifs) ? notifs : []);
         setLoading(false);
 
         // Mark unread notifications as read
-        const unreadIds = notifs.filter(n => !n.isRead).map(n => n.id);
+        const unreadIds = notifs.filter(n => !n.read).map(n => n.id);
         if (unreadIds.length > 0) {
-          console.log(`Marking notifications as read: ${unreadIds.join(', ')}`);
           try {
-            const markRes = await axios.patch(
+            await axios.put(
               `http://localhost:8080/api/auth/notifications/mark-read`,
               { notificationIds: unreadIds },
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
                 },
               }
             );
-            console.log('Mark read response:', markRes.data);
-            // Update local state to reflect read status
             setNotifications(prev => prev.map(n => 
-              unreadIds.includes(n.id) ? { ...n, isRead: true } : n
+              unreadIds.includes(n.id) ? { ...n, read: true } : n
             ));
           } catch (markError) {
             console.error('Error marking notifications as read:', markError);
-            if (markError.response?.status === 401 || markError.response?.status === 403) {
-              setError('Session expired. Please log in again.');
-              navigate('/login');
-            } else {
-              setError('Failed to mark notifications as read. Please try again.');
-            }
+            setError('Failed to update notifications. Please try again.');
           }
         }
       } catch (err) {
         console.error('Error fetching notifications:', err);
-        if (err.response) {
-          console.error('Response status:', err.response.status);
-          console.error('Response data:', err.response.data);
-          if (err.response.status === 401 || err.response.status === 403) {
-            setError('Session expired. Please log in again.');
-            navigate('/login');
-          } else {
-            setError('Failed to fetch notifications. Please try again.');
-          }
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError('Session expired. Please log in again.');
+          navigate('/login');
         } else {
-          setError('Network error. Please check your connection.');
+          setError('Unable to load notifications. Please try again later.');
         }
         setLoading(false);
       }
@@ -113,22 +96,34 @@ function NotificationThread({ userId, onClose }) {
         <p>No notifications</p>
       ) : (
         <ul className="notification-list">
-          {notifications.map((notification) => (
-            <li
-              key={notification.id}
-              className={`notification-item ${notification.isRead ? 'read' : 'unread'}`}
-              onClick={() => handleNotificationClick(notification)}
-            >
-              <span>
-                {notification.type === 'like'
-                  ? `${notification.senderUsername || notification.senderId} liked your post`
-                  : `${notification.senderUsername || notification.senderId} commented on your post`}
-              </span>
-              <span className="notification-time">
-                {new Date(notification.timestamp).toLocaleTimeString()}
-              </span>
-            </li>
-          ))}
+          {notifications.map(notification => {
+            // Ensure notification has required fields
+            const message = notification.message || '';
+            const senderUsername = notification.senderUsername || 'Someone';
+            const type = notification.type || 'unknown';
+
+            // Construct display message
+            let displayMessage = message;
+            if (message.includes('liked your post') || message.includes('commented on your post')) {
+              displayMessage = message;
+            } else {
+              const action = type === 'like' ? 'liked' : type === 'comment' ? 'commented on' : 'interacted with';
+              displayMessage = `${senderUsername} ${action} your post`;
+            }
+
+            return (
+              <li
+                key={notification.id}
+                className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <span>{displayMessage}</span>
+                <span className="notification-time">
+                  {new Date(notification.timestamp).toLocaleString()}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
